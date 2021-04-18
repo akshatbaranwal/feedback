@@ -1,85 +1,120 @@
-import 'package:feedback/import.dart';
+import '../import.dart';
 
 class LoginScreen extends StatefulWidget {
-  final connection;
-  LoginScreen(this.connection);
-  static const routeName = '/login_screen';
+  static const routeName = '/login-screen';
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  dynamic _data;
+  bool _login = true;
+  User _user;
 
-  Future<void> _getData() async {
-    final db = Data(widget.connection);
-    var results = await db.student('iit2019010@iiita.ac.in');
-    setState(() {
-      _data = results;
-    });
-    print(_data);
-    await widget.connection.close();
+  Future<void> _chooseUser() {
+    return showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: Text('Register as'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _login = false;
+                    _user = User.student;
+                  });
+                  Navigator.of(context).pop();
+                },
+                child: Text(
+                  'Student',
+                  style: TextStyle(fontSize: 17),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _login = false;
+                    _user = User.faculty;
+                  });
+                  Navigator.of(context).pop();
+                },
+                child: Text(
+                  'Faculty',
+                  style: TextStyle(fontSize: 17),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _login = false;
+                    _user = User.admin;
+                  });
+                  Navigator.of(context).pop();
+                },
+                child: Text(
+                  'Admin',
+                  style: TextStyle(fontSize: 17),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
-
-  @override
-  void initState() {
-    _getData();
-    super.initState();
-  }
-
-  // bool _validEmail() {}
-
-  // bool _validPassword() {}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Log In'),
-      ),
-      body: Container(
-        height: 600,
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              maxLines: 1,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                hintText: 'Enter your college ID',
-                labelText: 'Email',
-                prefixIcon: Icon(Icons.email_outlined),
-                border: OutlineInputBorder(),
-                disabledBorder: null,
-                enabledBorder: null,
-                errorBorder: null,
-                helperText: null,
-                errorText: null,
-              ),
-              controller: _emailController,
-              // onSubmitted: () {},
-            ),
-            TextField(
-              maxLines: 1,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                hintText: 'Enter password',
-                labelText: 'Password',
-                prefixIcon: Icon(Icons.security_outlined),
-                suffixIcon: Icon(Icons.remove_red_eye),
-                border: OutlineInputBorder(),
-                disabledBorder: null,
-                enabledBorder: null,
-                errorBorder: null,
-                helperText: null,
-              ),
-              controller: _passwordController,
-              // onSubmitted: () {},
-            ),
-          ],
+        title: Text(
+          _login
+              ? 'Login'
+              : _user == User.admin
+                  ? 'Admin Register'
+                  : _user == User.faculty
+                      ? 'Faculty Register'
+                      : 'Student Register',
         ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _login
+                ? Login()
+                : _user == User.admin
+                    ? AdminRegister()
+                    : _user == User.faculty
+                        ? FacultyRegister()
+                        : StudentRegister(),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_login
+                  ? "Don't have an account yet? "
+                  : 'Already have an account? '),
+              TextButton(
+                onPressed: _login
+                    ? () async {
+                        await _chooseUser();
+                      }
+                    : () {
+                        setState(() {
+                          _login = true;
+                        });
+                      },
+                child: Text(_login ? 'Register here' : 'Login here'),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 10,
+          ),
+        ],
       ),
     );
   }
