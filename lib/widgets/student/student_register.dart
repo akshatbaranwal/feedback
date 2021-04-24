@@ -35,9 +35,11 @@ class _StudentRegisterState extends State<StudentRegister> {
         Navigator.of(context).pushNamed(StudentDashboard.routeName);
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Connection Error'),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Connection Error'),
+        ),
+      );
     }
   }
 
@@ -178,7 +180,7 @@ class _StudentRegisterState extends State<StudentRegister> {
                         value: e[0],
                       ))
                   .toList(),
-              onChanged: (branch) {},
+              onChanged: (_) {},
               decoration: InputDecoration(
                 labelText: 'Branch',
                 hintText: 'Choose your branch',

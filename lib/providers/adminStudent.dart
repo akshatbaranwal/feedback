@@ -161,16 +161,16 @@ class AdminStudentList with ChangeNotifier {
       );
       if (response.isNotEmpty) {
         _items.add(AdminStudent(
-          id: response[0]['inserted']['id'],
+          id: response[0]['admin_student']['id'],
           name: response[0]['student']['name'],
           email: response[0]['student']['email'],
           sem: response[0]['branch_sem']['sem'],
           branch: response[0]['branch']['branchname'],
-          type: response[0]['inserted']['type'],
-          subject: response[0]['inserted']['subject'],
-          body: response[0]['inserted']['body'],
-          createdAt: response[0]['inserted']['created_at'],
-          modifiedAt: response[0]['inserted']['modified_at'],
+          type: response[0]['admin_student']['type'],
+          subject: response[0]['admin_student']['subject'],
+          body: response[0]['admin_student']['body'],
+          createdAt: response[0]['admin_student']['created_at'],
+          modifiedAt: response[0]['admin_student']['modified_at'],
           reply: null,
           replyCreatedAt: null,
           replyModifiedAt: null,

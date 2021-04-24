@@ -23,6 +23,7 @@ export 'providers/facultyStudent.dart';
 export 'screens/login_screen.dart';
 export 'screens/loading_screen.dart';
 export 'screens/admin_dashboard_screen.dart';
+export 'screens/add_new_screen.dart';
 export 'screens/faculty_dashboard_screen.dart';
 export 'screens/student_dashboard_screen.dart';
 

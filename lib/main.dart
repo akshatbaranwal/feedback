@@ -31,13 +31,17 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Feedback Management',
         theme: ThemeData(
+          sliderTheme: SliderTheme.of(context).copyWith(
+            trackShape: RectangularSliderTrackShape(),
+          ),
           primarySwatch: Colors.blueGrey,
-          accentColor: Colors.white30,
-          backgroundColor: Colors.grey,
+          // accentColor: Colors.white30,
+          // backgroundColor: Colors.grey,
           // appBarTheme: AppBarTheme(),
         ),
         initialRoute: '/',
         routes: {
+          AddNew.routeName: (ctx) => AddNew(),
           Loading.routeName: (ctx) => Loading(connection),
           LoginScreen.routeName: (ctx) => LoginScreen(),
           AdminDashboard.routeName: (ctx) => AdminDashboard(),

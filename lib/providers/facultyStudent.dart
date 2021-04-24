@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../import.dart';
 
 class FacultyStudent {
@@ -74,7 +76,7 @@ class FacultyStudentList with ChangeNotifier {
   }
 
   List<FacultyRating> get ratings {
-    return [..._ratings].reversed.toList();
+    return [..._ratings];
   }
 
   Future<void> fetch({
@@ -103,7 +105,7 @@ class FacultyStudentList with ChangeNotifier {
     join faculty using (facultyid)
     join course using (courseid)
     join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
-    where faculty_student.facultyid == @facultyid
+    where faculty_student.facultyid = @facultyid
     ''', substitutionValues: {
               'facultyid': id,
             });
@@ -138,7 +140,7 @@ class FacultyStudentList with ChangeNotifier {
       final response = from == User.student
           ? await connection.mappedResultsQuery(
               '''
-    select faculty.name, course.coursename, faculty_rating.*
+    select faculty.name, faculty.facultyid, course.coursename, faculty_rating.*
     from student
     join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
     join branch_course using (branchsemid)
@@ -153,7 +155,7 @@ class FacultyStudentList with ChangeNotifier {
             )
           : await connection.mappedResultsQuery(
               '''
-    select faculty.name, course.coursename, faculty_rating.*
+    select faculty.name, faculty.facultyid, course.coursename, faculty_rating.*
     from faculty
     join course using (courseid)
     join faculty_rating using (facultyid)
@@ -169,7 +171,7 @@ class FacultyStudentList with ChangeNotifier {
           loadedData.add(FacultyRating(
             name: val['faculty']['name'],
             course: val['course']['coursename'],
-            facultyid: val['faculty_rating']['facultyid'],
+            facultyid: val['faculty']['facultyid'],
             studentid: val['faculty_rating']['studentid'],
             lecture: val['faculty_rating']['lecture'],
             demo: val['faculty_rating']['demo'],
@@ -229,6 +231,61 @@ class FacultyStudentList with ChangeNotifier {
     }
   }
 
+  Future<void> updateRating({
+    @required facultyid,
+    @required studentid,
+    @required lecture,
+    @required demo,
+    @required slide,
+    @required lab,
+    @required syllabus,
+    @required interaction,
+    @required comment,
+  }) async {
+    try {
+      final response = await connection.mappedResultsQuery(
+        '''
+      insert into faculty_rating
+      values (@facultyid, @studentid, @lecture, @demo, @slide, @lab, @syllabus, @interaction, @comment)
+      on conflict (facultyid, studentid) do UPDATE
+      set facultyid = @facultyid, studentid = @studentid, lecture = @lecture, demo = @demo, slide = @slide, lab = @lab, syllabus = @syllabus, interaction = @interaction, comment = @comment
+      returning *
+      ''',
+        substitutionValues: {
+          'studentid': studentid,
+          'facultyid': facultyid,
+          'lecture': lecture,
+          'demo': demo,
+          'slide': slide,
+          'lab': lab,
+          'syllabus': syllabus,
+          'interaction': interaction,
+          'comment': comment,
+        },
+      );
+      if (response.isNotEmpty) {
+        var _prevRatingIndex =
+            _ratings.indexWhere((element) => element.facultyid == facultyid);
+        _ratings[_prevRatingIndex] = FacultyRating(
+          name: _ratings[_prevRatingIndex].name,
+          course: _ratings[_prevRatingIndex].course,
+          facultyid: facultyid,
+          studentid: studentid,
+          lecture: lecture,
+          demo: demo,
+          slide: slide,
+          lab: lab,
+          syllabus: syllabus,
+          interaction: interaction,
+          comment: comment,
+        );
+        notifyListeners();
+      }
+    } catch (error) {
+      throw (error);
+    }
+  }
+
   Future<void> add({
     @required facultyid,
     @required studentid,
@@ -258,17 +315,17 @@ class FacultyStudentList with ChangeNotifier {
       );
       if (response.isNotEmpty) {
         _items.add(FacultyStudent(
-          id: response[0]['inserted']['id'],
+          id: response[0]['faculty_student']['id'],
           sem: response[0]['branch_sem']['sem'],
           course: response[0]['course']['coursename'],
           studentemail: response[0]['student']['email'],
           facultyemail: response[0]['faculty']['email'],
           studentname: response[0]['student']['name'],
           facultyname: response[0]['faculty']['name'],
-          subject: response['inserted']['subject'],
-          body: response['inserted']['body'],
-          createdAt: response['inserted']['created_at'],
-          modifiedAt: response['inserted']['modified_at'],
+          subject: response[0]['faculty_student']['subject'],
+          body: response[0]['faculty_student']['body'],
+          createdAt: response[0]['faculty_student']['created_at'],
+          modifiedAt: response[0]['faculty_student']['modified_at'],
           reply: null,
           replyCreatedAt: null,
           replyModifiedAt: null,

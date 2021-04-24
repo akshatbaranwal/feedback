@@ -129,13 +129,17 @@ class _FacultyRegisterState extends State<FacultyRegister> {
               height: 15,
             ),
             DropdownButtonFormField(
+              isExpanded: true,
+              isDense: false,
+              itemHeight: 50,
+              menuMaxHeight: 500,
               items: faculty.courseList
                   .map((e) => DropdownMenuItem(
                         child: Text(e[1]),
                         value: e[0],
                       ))
                   .toList(),
-              onChanged: (branch) {},
+              onChanged: (_) {},
               decoration: InputDecoration(
                 labelText: 'Course',
                 hintText: 'Choose your course',

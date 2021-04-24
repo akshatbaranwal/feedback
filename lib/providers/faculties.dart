@@ -26,7 +26,7 @@ class FacultyData with ChangeNotifier {
     return [..._emailList];
   }
 
-  List<String> get courseList {
+  List<dynamic> get courseList {
     return [..._courseList];
   }
 
@@ -94,10 +94,10 @@ class FacultyData with ChangeNotifier {
         },
       );
       _data = Faculty(
-        facultyid: response[0],
-        email: response[1],
-        name: response[2],
-        courseid: response[3],
+        facultyid: response[0][0],
+        email: response[0][1],
+        name: response[0][2],
+        courseid: response[0][3],
       );
       notifyListeners();
     } catch (error) {

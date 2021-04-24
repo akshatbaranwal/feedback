@@ -155,15 +155,15 @@ class AdminFacultyList with ChangeNotifier {
       );
       if (response.isNotEmpty) {
         _items.add(AdminFaculty(
-          id: response[0]['inserted']['id'],
+          id: response[0]['admin_faculty']['id'],
           name: response[0]['faculty']['name'],
           email: response[0]['faculty']['email'],
           course: response[0]['course']['coursename'],
-          type: response[0]['inserted']['type'],
-          subject: response[0]['inserted']['subject'],
-          body: response[0]['inserted']['body'],
-          createdAt: response[0]['inserted']['created_at'],
-          modifiedAt: response[0]['inserted']['modified_at'],
+          type: response[0]['admin_faculty']['type'],
+          subject: response[0]['admin_faculty']['subject'],
+          body: response[0]['admin_faculty']['body'],
+          createdAt: response[0]['admin_faculty']['created_at'],
+          modifiedAt: response[0]['admin_faculty']['modified_at'],
           reply: null,
           replyCreatedAt: null,
           replyModifiedAt: null,

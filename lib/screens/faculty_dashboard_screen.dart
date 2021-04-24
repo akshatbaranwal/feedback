@@ -12,6 +12,66 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
   FacultyData _faculty;
   int _indexBottomNavBar = 0;
 
+  Future<void> _add() {
+    return showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("It's a"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).popAndPushNamed(
+                  AddNew.routeName,
+                  arguments: {
+                    'type': Type.opinion,
+                    'from': User.faculty,
+                  },
+                );
+              },
+              child: Text(
+                'Opinion',
+                style: TextStyle(fontSize: 17),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).popAndPushNamed(
+                  AddNew.routeName,
+                  arguments: {
+                    'type': Type.request,
+                    'from': User.faculty,
+                  },
+                );
+              },
+              child: Text(
+                'Request',
+                style: TextStyle(fontSize: 17),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).popAndPushNamed(
+                  AddNew.routeName,
+                  arguments: {
+                    'type': Type.query,
+                    'from': User.faculty,
+                  },
+                );
+              },
+              child: Text(
+                'Query',
+                style: TextStyle(fontSize: 17),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _filterAdmin() async {
     return showDialog(
       context: context,
@@ -109,6 +169,14 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: _indexBottomNavBar == 0
+          ? FloatingActionButton(
+              onPressed: () {
+                _add();
+              },
+              child: Icon(Icons.add),
+            )
+          : null,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text('Hey ${_faculty.data.name.split(' ')[0]}!'),

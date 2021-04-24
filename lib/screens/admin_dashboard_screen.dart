@@ -9,7 +9,6 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   bool _isInit = true;
   Type _type = Type.all;
-  AdminData _admin;
   int _indexBottomNavBar = 0;
 
   Future<void> _filter() async {
@@ -27,7 +26,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   setState(() {
                     _type = Type.all;
                   });
-                  Navigator.of(context).pop();
+                  Navigator.of(ctx).pop();
                 },
                 child: Text(
                   'All',
@@ -39,7 +38,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   setState(() {
                     _type = Type.opinion;
                   });
-                  Navigator.of(context).pop();
+                  Navigator.of(ctx).pop();
                 },
                 child: Text(
                   'Opinion',
@@ -51,7 +50,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   setState(() {
                     _type = Type.request;
                   });
-                  Navigator.of(context).pop();
+                  Navigator.of(ctx).pop();
                 },
                 child: Text(
                   'Request',
@@ -63,7 +62,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   setState(() {
                     _type = Type.query;
                   });
-                  Navigator.of(context).pop();
+                  Navigator.of(ctx).pop();
                 },
                 child: Text(
                   'Query',
@@ -82,7 +81,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      _admin = Provider.of<AdminData>(context);
       Provider.of<AdminFacultyList>(context).fetch();
       Provider.of<AdminStudentList>(context).fetch();
       _isInit = false;

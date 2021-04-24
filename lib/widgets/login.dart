@@ -141,9 +141,6 @@ class _LoginState extends State<Login> {
               onSaved: (password) {
                 _password = password;
               },
-              onFieldSubmitted: (_) {
-                _safeForm();
-              },
             ),
             SizedBox(
               height: 20,
