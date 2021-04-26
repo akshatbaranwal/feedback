@@ -7,9 +7,12 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  bool _isInit = true;
+  bool _isInit = true, _isLoading = false;
   Type _type = Type.all;
   int _indexBottomNavBar = 0;
+  AdminFacultyList _adminFaculty;
+  AdminStudentList _adminStudent;
+  FacultyStudentList _facultyStudent;
 
   Future<void> _filter() async {
     return showDialog(
@@ -69,6 +72,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   style: TextStyle(fontSize: 17),
                 ),
               ),
+              if (_indexBottomNavBar == 0) ...[
+                SizedBox(height: 10),
+                Divider(),
+                SizedBox(height: 10),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _type = Type.rating;
+                    });
+                    Navigator.of(ctx).pop();
+                  },
+                  child: Text(
+                    'Performance',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
+              ],
             ],
           ),
         );
@@ -78,11 +98,24 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _updateProfile() async {}
 
+  Future<void> _initialFetch() async {
+    await Provider.of<AdminFacultyList>(context, listen: false).fetch();
+    await Provider.of<AdminStudentList>(context, listen: false).fetch();
+    await Provider.of<FacultyStudentList>(context, listen: false).fetch(
+      from: User.admin,
+    );
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      Provider.of<AdminFacultyList>(context).fetch();
-      Provider.of<AdminStudentList>(context).fetch();
+      setState(() {
+        _isLoading = true;
+      });
+      _initialFetch();
       _isInit = false;
     }
     super.didChangeDependencies();
@@ -90,6 +123,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    _adminFaculty = Provider.of<AdminFacultyList>(context);
+    _adminStudent = Provider.of<AdminStudentList>(context);
+    _facultyStudent = Provider.of<FacultyStudentList>(context);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -132,9 +168,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      body: _indexBottomNavBar == 0
-          ? AdminDashboardFaculty(_type)
-          : AdminDashboardStudent(_type),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : RefreshIndicator(
+              onRefresh: () async {
+                _adminFaculty.fetch();
+                _adminStudent.fetch();
+                _facultyStudent.fetch(
+                  from: User.admin,
+                );
+              },
+              child: _indexBottomNavBar == 0
+                  ? AdminDashboardFaculty(_type)
+                  : AdminDashboardStudent(_type),
+            ),
     );
   }
 }

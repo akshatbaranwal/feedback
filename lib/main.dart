@@ -26,11 +26,21 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (ctx) => AdminStudentList(connection)),
         ChangeNotifierProvider(create: (ctx) => AdminFacultyList(connection)),
         ChangeNotifierProvider(create: (ctx) => FacultyStudentList(connection)),
-        ChangeNotifierProvider(create: (ctx) => BranchCourse(connection)),
       ],
       child: MaterialApp(
         title: 'Feedback Management',
         theme: ThemeData(
+          dialogTheme: DialogTheme(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
+          ),
+          cardTheme: CardTheme(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(8),
+            elevation: 3,
+          ),
           sliderTheme: SliderTheme.of(context).copyWith(
             trackShape: RectangularSliderTrackShape(),
           ),

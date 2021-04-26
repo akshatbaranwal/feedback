@@ -3,8 +3,8 @@ import '../import.dart';
 class AdminStudent {
   final int id;
   final int sem;
-  final String name;
-  final String email;
+  final String studentname;
+  final String studentemail;
   final String branch;
   final String type;
   final String subject;
@@ -18,8 +18,8 @@ class AdminStudent {
   AdminStudent({
     @required this.id,
     @required this.sem,
-    @required this.name,
-    @required this.email,
+    @required this.studentname,
+    @required this.studentemail,
     @required this.branch,
     @required this.type,
     @required this.subject,
@@ -39,7 +39,8 @@ class AdminStudentList with ChangeNotifier {
   List<AdminStudent> _items = [];
 
   List<AdminStudent> get items {
-    return [..._items].reversed.toList();
+    _items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return [..._items];
   }
 
   Future<void> fetch({studentid}) async {
@@ -72,8 +73,8 @@ class AdminStudentList with ChangeNotifier {
         response.forEach((val) {
           loadedData.add(AdminStudent(
             id: val['admin_student']['id'],
-            name: val['student']['name'],
-            email: val['student']['email'],
+            studentname: val['student']['name'],
+            studentemail: val['student']['email'],
             sem: val['branch_sem']['sem'],
             branch: val['branch']['branchname'],
             type: val['admin_student']['type'],
@@ -114,8 +115,8 @@ class AdminStudentList with ChangeNotifier {
       if (response.isNotEmpty) {
         _items[index] = AdminStudent(
           id: _items[index].id,
-          name: _items[index].name,
-          email: _items[index].email,
+          studentname: _items[index].studentname,
+          studentemail: _items[index].studentemail,
           branch: _items[index].branch,
           sem: _items[index].sem,
           type: _items[index].type,
@@ -150,10 +151,11 @@ class AdminStudentList with ChangeNotifier {
     ) select *
     from inserted
     join student using (studentid)
-    join branch using (branchid)
+    join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2) 
+    join branch on branch.branchid = branch_sem.branchid
     ''',
         substitutionValues: {
-          'id': studentid,
+          'studentid': studentid,
           'type': type,
           'subject': subject,
           'body': body,
@@ -162,8 +164,8 @@ class AdminStudentList with ChangeNotifier {
       if (response.isNotEmpty) {
         _items.add(AdminStudent(
           id: response[0]['admin_student']['id'],
-          name: response[0]['student']['name'],
-          email: response[0]['student']['email'],
+          studentname: response[0]['student']['name'],
+          studentemail: response[0]['student']['email'],
           sem: response[0]['branch_sem']['sem'],
           branch: response[0]['branch']['branchname'],
           type: response[0]['admin_student']['type'],

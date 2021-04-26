@@ -89,7 +89,7 @@ class _LoginState extends State<Login> {
               height: 20,
             ),
             TextFormField(
-              initialValue: 'iit2019010@iiita.ac.in',
+              initialValue: '',
               decoration: InputDecoration(
                 labelText: 'Email',
                 hintText: 'Enter college ID',
@@ -115,7 +115,7 @@ class _LoginState extends State<Login> {
               height: 20,
             ),
             TextFormField(
-              initialValue: 'iit2019010@iiita.ac.in',
+              initialValue: '',
               obscureText: _hidePassword,
               decoration: InputDecoration(
                 labelText: 'Password',

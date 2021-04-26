@@ -15,8 +15,9 @@ class _AddNewState extends State<AddNew> {
   FacultyData _faculty;
   User _from;
   Type _type;
-  int _facultyid, _lecture, _demo, _slide, _lab, _syllabus, _interaction;
-  String _subject, _body, _comment;
+  int _facultyid;
+  double _lecture, _demo, _slide, _lab, _syllabus, _interaction;
+  String _subject, _body;
 
   Future<void> _saveForm() async {
     final isValid = _form.currentState.validate();
@@ -148,7 +149,6 @@ class _AddNewState extends State<AddNew> {
         lab: _lab,
         syllabus: _syllabus,
         interaction: _interaction,
-        comment: _comment,
       );
       Navigator.of(context).pop();
     } catch (error) {
@@ -175,13 +175,12 @@ class _AddNewState extends State<AddNew> {
               _facultyid = facultyid;
               int _index = _facultyStudent.ratings
                   .indexWhere((element) => element.facultyid == facultyid);
-              _lecture = _facultyStudent.ratings[_index].lecture ?? 50 ?? 50;
+              _lecture = _facultyStudent.ratings[_index].lecture ?? 50;
               _demo = _facultyStudent.ratings[_index].demo ?? 50;
               _slide = _facultyStudent.ratings[_index].slide ?? 50;
               _lab = _facultyStudent.ratings[_index].lab ?? 50;
               _syllabus = _facultyStudent.ratings[_index].syllabus ?? 50;
               _interaction = _facultyStudent.ratings[_index].interaction ?? 50;
-              _comment = _facultyStudent.ratings[_index].comment ?? 'none';
             });
           },
           decoration: InputDecoration(
@@ -208,14 +207,14 @@ class _AddNewState extends State<AddNew> {
                 ),
               ),
               Slider(
-                value: _lecture.toDouble(),
+                value: _lecture,
                 min: 0,
                 max: 100,
                 divisions: 100,
                 label: _lecture.toString(),
                 onChanged: (value) {
                   setState(() {
-                    _lecture = value.toInt();
+                    _lecture = value;
                   });
                 },
               ),
@@ -226,14 +225,14 @@ class _AddNewState extends State<AddNew> {
                 ),
               ),
               Slider(
-                value: _demo.toDouble(),
+                value: _demo,
                 min: 0,
                 max: 100,
                 divisions: 100,
                 label: _demo.toString(),
                 onChanged: (value) {
                   setState(() {
-                    _demo = value.toInt();
+                    _demo = value;
                   });
                 },
               ),
@@ -244,14 +243,14 @@ class _AddNewState extends State<AddNew> {
                 ),
               ),
               Slider(
-                value: _slide.toDouble(),
+                value: _slide,
                 min: 0,
                 max: 100,
                 divisions: 100,
                 label: _slide.toString(),
                 onChanged: (value) {
                   setState(() {
-                    _slide = value.toInt();
+                    _slide = value;
                   });
                 },
               ),
@@ -262,14 +261,14 @@ class _AddNewState extends State<AddNew> {
                 ),
               ),
               Slider(
-                value: _lab.toDouble(),
+                value: _lab,
                 min: 0,
                 max: 100,
                 divisions: 100,
                 label: _lab.toString(),
                 onChanged: (value) {
                   setState(() {
-                    _lab = value.toInt();
+                    _lab = value;
                   });
                 },
               ),
@@ -280,14 +279,14 @@ class _AddNewState extends State<AddNew> {
                 ),
               ),
               Slider(
-                value: _syllabus.toDouble(),
+                value: _syllabus,
                 min: 0,
                 max: 100,
                 divisions: 100,
                 label: _syllabus.toString(),
                 onChanged: (value) {
                   setState(() {
-                    _syllabus = value.toInt();
+                    _syllabus = value;
                   });
                 },
               ),
@@ -298,25 +297,14 @@ class _AddNewState extends State<AddNew> {
                 ),
               ),
               Slider(
-                value: _interaction.toDouble(),
+                value: _interaction,
                 min: 0,
                 max: 100,
                 divisions: 100,
                 label: _interaction.toString(),
                 onChanged: (value) {
                   setState(() {
-                    _interaction = value.toInt();
-                  });
-                },
-              ),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Optional Comment',
-                ),
-                keyboardType: TextInputType.multiline,
-                onChanged: (comment) {
-                  setState(() {
-                    _comment = comment;
+                    _interaction = value;
                   });
                 },
               ),

@@ -7,9 +7,12 @@ class FacultyDashboard extends StatefulWidget {
 }
 
 class _FacultyDashboardState extends State<FacultyDashboard> {
-  bool _isInit = true;
+  bool _isInit = true, _isLoading = false;
   Type _type = Type.all;
   FacultyData _faculty;
+  AdminFacultyList _adminFaculty;
+  FacultyStudentList _facultyStudent;
+  List<FacultyRating> _rating;
   int _indexBottomNavBar = 0;
 
   Future<void> _add() {
@@ -137,30 +140,29 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
     );
   }
 
-  void _filterStudent() {
-    if (_type == Type.feedback)
-      setState(() {
-        _type = Type.rating;
-      });
-    else if (_type == Type.rating)
-      setState(() {
-        _type = Type.feedback;
-      });
-  }
-
   Future<void> _updateProfile() async {}
+
+  Future<void> _initialFetch() async {
+    var faculty = Provider.of<FacultyData>(context, listen: false);
+    await Provider.of<AdminFacultyList>(context, listen: false).fetch(
+      facultyid: faculty.data.facultyid,
+    );
+    await Provider.of<FacultyStudentList>(context, listen: false).fetch(
+      from: User.faculty,
+      id: faculty.data.facultyid,
+    );
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      _faculty = Provider.of<FacultyData>(context);
-      Provider.of<AdminFacultyList>(context).fetch(
-        facultyid: _faculty.data.facultyid,
-      );
-      Provider.of<FacultyStudentList>(context).fetch(
-        from: User.faculty,
-        id: _faculty.data.facultyid,
-      );
+      setState(() {
+        _isLoading = true;
+      });
+      _initialFetch();
       _isInit = false;
     }
     super.didChangeDependencies();
@@ -168,6 +170,11 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    _adminFaculty = Provider.of<AdminFacultyList>(context);
+    _facultyStudent = Provider.of<FacultyStudentList>(context);
+    _rating = Provider.of<FacultyStudentList>(context).ratings;
+    _faculty = Provider.of<FacultyData>(context);
+
     return Scaffold(
       floatingActionButton: _indexBottomNavBar == 0
           ? FloatingActionButton(
@@ -181,22 +188,27 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
         automaticallyImplyLeading: false,
         title: Text('Hey ${_faculty.data.name.split(' ')[0]}!'),
         actions: [
-          _indexBottomNavBar == 0
-              ? IconButton(
-                  onPressed: () async {
-                    _filterAdmin();
-                  },
-                  icon: Icon(Icons.filter_alt),
-                )
-              : _type == Type.feedback
-                  ? IconButton(
-                      onPressed: _filterStudent,
-                      icon: Icon(Icons.star_rate),
-                    )
-                  : IconButton(
-                      onPressed: _filterStudent,
-                      icon: Icon(Icons.feedback),
-                    ),
+          if (_indexBottomNavBar == 0)
+            IconButton(
+              onPressed: () async {
+                _filterAdmin();
+              },
+              icon: Icon(Icons.filter_alt),
+            ),
+          IconButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => Dialog(
+                  insetPadding: const EdgeInsets.all(10),
+                  child: Graph(_rating[0]),
+                ),
+              );
+            },
+            icon: Icon(
+              Icons.analytics_outlined,
+            ),
+          ),
           IconButton(
             onPressed: () async {
               _updateProfile();
@@ -228,9 +240,24 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      body: _indexBottomNavBar == 0
-          ? FacultyDashboardAdmin(_type)
-          : FacultyDashboardStudent(_type),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : RefreshIndicator(
+              onRefresh: () async {
+                _adminFaculty.fetch(
+                  facultyid: _faculty.data.facultyid,
+                );
+                _facultyStudent.fetch(
+                  from: User.faculty,
+                  id: _faculty.data.facultyid,
+                );
+              },
+              child: _indexBottomNavBar == 0
+                  ? FacultyDashboardAdmin(_type)
+                  : FacultyDashboardStudent(),
+            ),
     );
   }
 }

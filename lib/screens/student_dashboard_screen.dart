@@ -7,9 +7,11 @@ class StudentDashboard extends StatefulWidget {
 }
 
 class _StudentDashboardState extends State<StudentDashboard> {
-  bool _isInit = true;
+  bool _isInit = true, _isLoading = false;
   Type _type = Type.all;
   StudentData _student;
+  AdminStudentList _adminStudent;
+  FacultyStudentList _facultyStudent;
   int _indexBottomNavBar = 0;
 
   Future<void> _add() {
@@ -170,30 +172,29 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
-  void _filterFaculty() {
-    if (_type == Type.feedback)
-      setState(() {
-        _type = Type.rating;
-      });
-    else if (_type == Type.rating)
-      setState(() {
-        _type = Type.feedback;
-      });
-  }
-
   Future<void> _updateProfile() async {}
+
+  Future<void> _initialFetch() async {
+    var student = Provider.of<StudentData>(context, listen: false);
+    await Provider.of<AdminStudentList>(context, listen: false).fetch(
+      studentid: student.data.studentid,
+    );
+    await Provider.of<FacultyStudentList>(context, listen: false).fetch(
+      from: User.student,
+      id: student.data.studentid,
+    );
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      _student = Provider.of<StudentData>(context);
-      Provider.of<AdminStudentList>(context).fetch(
-        studentid: _student.data.studentid,
-      );
-      Provider.of<FacultyStudentList>(context).fetch(
-        from: User.student,
-        id: _student.data.studentid,
-      );
+      setState(() {
+        _isLoading = true;
+      });
+      _initialFetch();
       _isInit = false;
     }
     super.didChangeDependencies();
@@ -201,33 +202,24 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    _adminStudent = Provider.of<AdminStudentList>(context);
+    _facultyStudent = Provider.of<FacultyStudentList>(context);
+    _student = Provider.of<StudentData>(context);
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
-        onPressed: () {
-          _add();
-        },
+        onPressed: _add,
       ),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text('Hey ${_student.data.name.split(' ')[0]}!'),
         actions: [
-          _indexBottomNavBar == 0
-              ? IconButton(
-                  onPressed: () async {
-                    _filterAdmin();
-                  },
-                  icon: Icon(Icons.filter_alt),
-                )
-              : _type == Type.feedback
-                  ? IconButton(
-                      onPressed: _filterFaculty,
-                      icon: Icon(Icons.star_rate),
-                    )
-                  : IconButton(
-                      onPressed: _filterFaculty,
-                      icon: Icon(Icons.feedback),
-                    ),
+          if (_indexBottomNavBar == 0)
+            IconButton(
+              onPressed: _filterAdmin,
+              icon: Icon(Icons.filter_alt),
+            ),
           IconButton(
             onPressed: () async {
               _updateProfile();
@@ -259,9 +251,24 @@ class _StudentDashboardState extends State<StudentDashboard> {
           fontWeight: FontWeight.bold,
         ),
       ),
-      body: _indexBottomNavBar == 0
-          ? StudentDashboardAdmin(_type)
-          : StudentDashboardFaculty(_type),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : RefreshIndicator(
+              onRefresh: () async {
+                _adminStudent.fetch(
+                  studentid: _student.data.studentid,
+                );
+                _facultyStudent.fetch(
+                  from: User.student,
+                  id: _student.data.studentid,
+                );
+              },
+              child: _indexBottomNavBar == 0
+                  ? StudentDashboardAdmin(_type)
+                  : StudentDashboardFaculty(),
+            ),
     );
   }
 }

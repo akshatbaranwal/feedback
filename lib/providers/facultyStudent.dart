@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:collection/collection.dart';
 
 import '../import.dart';
 
@@ -40,27 +40,23 @@ class FacultyRating {
   final String name;
   final String course;
   final int facultyid;
-  final int studentid;
-  final int lecture;
-  final int demo;
-  final int slide;
-  final int lab;
-  final int syllabus;
-  final int interaction;
-  final String comment;
+  final double lecture;
+  final double demo;
+  final double slide;
+  final double lab;
+  final double syllabus;
+  final double interaction;
 
   FacultyRating({
     @required this.name,
     @required this.course,
     @required this.facultyid,
-    @required this.studentid,
     @required this.lecture,
     @required this.demo,
     @required this.slide,
     @required this.lab,
     @required this.syllabus,
     @required this.interaction,
-    @required this.comment,
   });
 }
 
@@ -72,7 +68,8 @@ class FacultyStudentList with ChangeNotifier {
   List<FacultyRating> _ratings = [];
 
   List<FacultyStudent> get items {
-    return [..._items].reversed.toList();
+    _items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return [..._items];
   }
 
   List<FacultyRating> get ratings {
@@ -81,11 +78,12 @@ class FacultyStudentList with ChangeNotifier {
 
   Future<void> fetch({
     @required User from,
-    @required int id,
+    int id,
   }) async {
-    try {
-      final response = from == User.student
-          ? await connection.mappedResultsQuery('''
+    if (id != null)
+      try {
+        final response = from == User.student
+            ? await connection.mappedResultsQuery('''
     select *
     from faculty_student
     left join student_faculty using (id)
@@ -95,9 +93,9 @@ class FacultyStudentList with ChangeNotifier {
     join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
     where faculty_student.studentid = @studentid
     ''', substitutionValues: {
-              'studentid': id,
-            })
-          : await connection.mappedResultsQuery('''
+                'studentid': id,
+              })
+            : await connection.mappedResultsQuery('''
     select *
     from faculty_student
     left join student_faculty using (id)
@@ -107,39 +105,39 @@ class FacultyStudentList with ChangeNotifier {
     join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
     where faculty_student.facultyid = @facultyid
     ''', substitutionValues: {
-              'facultyid': id,
-            });
-      if (response.isNotEmpty) {
-        final List<FacultyStudent> loadedData = [];
-        response.forEach((val) {
-          loadedData.add(FacultyStudent(
-            id: val['faculty_student']['id'],
-            sem: val['branch_sem']['sem'],
-            studentemail: val['student']['email'],
-            course: val['course']['coursename'],
-            facultyemail: val['faculty']['email'],
-            studentname: val['student']['name'],
-            facultyname: val['faculty']['name'],
-            subject: val['faculty_student']['subject'],
-            body: val['faculty_student']['body'],
-            createdAt: val['faculty_student']['created_at'],
-            modifiedAt: val['faculty_student']['modified_at'],
-            reply: val['student_faculty']['reply'],
-            replyCreatedAt: val['student_faculty']['created_at'],
-            replyModifiedAt: val['student_faculty']['modified_at'],
-          ));
-        });
-        _items = loadedData;
-        notifyListeners();
+                'facultyid': id,
+              });
+        if (response.isNotEmpty) {
+          final List<FacultyStudent> loadedData = [];
+          response.forEach((val) {
+            loadedData.add(FacultyStudent(
+              id: val['faculty_student']['id'],
+              sem: val['branch_sem']['sem'],
+              studentemail: val['student']['email'],
+              course: val['course']['coursename'],
+              facultyemail: val['faculty']['email'],
+              studentname: val['student']['name'],
+              facultyname: val['faculty']['name'],
+              subject: val['faculty_student']['subject'],
+              body: val['faculty_student']['body'],
+              createdAt: val['faculty_student']['created_at'],
+              modifiedAt: val['faculty_student']['modified_at'],
+              reply: val['student_faculty']['reply'],
+              replyCreatedAt: val['student_faculty']['created_at'],
+              replyModifiedAt: val['student_faculty']['modified_at'],
+            ));
+          });
+          _items = loadedData;
+          notifyListeners();
+        }
+      } catch (error) {
+        throw (error);
       }
-    } catch (error) {
-      throw (error);
-    }
-
-    try {
-      final response = from == User.student
-          ? await connection.mappedResultsQuery(
-              '''
+    switch (from) {
+      case User.student:
+        try {
+          var response = await connection.mappedResultsQuery(
+            '''
     select faculty.name, faculty.facultyid, course.coursename, faculty_rating.*
     from student
     join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
@@ -149,44 +147,142 @@ class FacultyStudentList with ChangeNotifier {
     left join faculty_rating on faculty_rating.studentid = student.studentid and faculty_rating.facultyid = faculty.facultyid
     where student.studentid = @studentid
     ''',
-              substitutionValues: {
-                'studentid': id,
-              },
-            )
-          : await connection.mappedResultsQuery(
-              '''
-    select faculty.name, faculty.facultyid, course.coursename, faculty_rating.*
-    from faculty
-    join course using (courseid)
-    join faculty_rating using (facultyid)
-    where facultyid = @facultyid
+            substitutionValues: {
+              'studentid': id,
+            },
+          );
+          if (response.isNotEmpty) {
+            final List<FacultyRating> loadedData = [];
+            response.forEach((val) {
+              loadedData.add(FacultyRating(
+                name: val['faculty']['name'],
+                course: val['course']['coursename'],
+                facultyid: val['faculty']['facultyid'],
+                lecture: val['faculty_rating']['lecture'],
+                demo: val['faculty_rating']['demo'],
+                slide: val['faculty_rating']['slide'],
+                lab: val['faculty_rating']['lab'],
+                syllabus: val['faculty_rating']['syllabus'],
+                interaction: val['faculty_rating']['interaction'],
+              ));
+            });
+            _ratings = loadedData;
+            notifyListeners();
+          }
+        } catch (error) {
+          throw error;
+        }
+        break;
+
+      case User.faculty:
+        try {
+          var response = await connection.mappedResultsQuery(
+            '''
+    select faculty.name, course.coursename, faculty_rating.*
+    from faculty_rating
+    join faculty using(facultyid)
+    join course using(courseid)
+    where faculty.facultyid = @facultyid
     ''',
-              substitutionValues: {
-                'facultyid': id,
-              },
+            substitutionValues: {
+              'facultyid': id,
+            },
+          );
+          int len = response.length;
+          if (len != 0) {
+            var result = FacultyRating(
+              name: '',
+              course: '',
+              facultyid: 0,
+              lecture: 0,
+              demo: 0,
+              slide: 0,
+              lab: 0,
+              syllabus: 0,
+              interaction: 0,
             );
-      if (response.isNotEmpty) {
-        final List<FacultyRating> loadedData = [];
-        response.forEach((val) {
-          loadedData.add(FacultyRating(
-            name: val['faculty']['name'],
-            course: val['course']['coursename'],
-            facultyid: val['faculty']['facultyid'],
-            studentid: val['faculty_rating']['studentid'],
-            lecture: val['faculty_rating']['lecture'],
-            demo: val['faculty_rating']['demo'],
-            slide: val['faculty_rating']['slide'],
-            lab: val['faculty_rating']['lab'],
-            syllabus: val['faculty_rating']['syllabus'],
-            interaction: val['faculty_rating']['interaction'],
-            comment: val['faculty_rating']['comment'],
-          ));
-        });
-        _ratings = loadedData;
-        notifyListeners();
-      }
-    } catch (error) {
-      throw (error);
+            result = response.fold(
+              result,
+              (previousValue, element) => FacultyRating(
+                name: element['faculty']['name'],
+                course: element['course']['coursename'],
+                facultyid: element['faculty_rating']['facultyid'],
+                lecture: element['faculty_rating']['lecture'] / len +
+                    previousValue.lecture,
+                demo: element['faculty_rating']['demo'] / len +
+                    previousValue.demo,
+                slide: element['faculty_rating']['slide'] / len +
+                    previousValue.slide,
+                lab: element['faculty_rating']['lab'] / len + previousValue.lab,
+                syllabus: element['faculty_rating']['syllabus'] / len +
+                    previousValue.syllabus,
+                interaction: element['faculty_rating']['interaction'] / len +
+                    previousValue.interaction,
+              ),
+            );
+            _ratings = [result];
+            notifyListeners();
+          }
+        } catch (error) {
+          throw error;
+        }
+        break;
+
+      case User.admin:
+        try {
+          var response = await connection.mappedResultsQuery('''
+    select faculty.name, course.coursename, faculty_rating.*
+    from faculty_rating
+    join faculty using(facultyid)
+    join course using(courseid)
+    ''');
+          if (response.isNotEmpty) {
+            var initialValue = FacultyRating(
+              name: '',
+              course: '',
+              facultyid: 0,
+              lecture: 0,
+              demo: 0,
+              slide: 0,
+              lab: 0,
+              syllabus: 0,
+              interaction: 0,
+            );
+            int len;
+            var result =
+                groupBy(response, (obj) => obj['faculty_rating']['facultyid']);
+            final List<FacultyRating> loadedData = [];
+            result.forEach((key, value) {
+              len = value.length;
+              FacultyRating temp = value.fold(
+                  initialValue,
+                  (previousValue, element) => FacultyRating(
+                        name: element['faculty']['name'],
+                        course: element['course']['coursename'],
+                        facultyid: element['faculty_rating']['facultyid'],
+                        lecture: element['faculty_rating']['lecture'] / len +
+                            previousValue.lecture,
+                        demo: element['faculty_rating']['demo'] / len +
+                            previousValue.demo,
+                        slide: element['faculty_rating']['slide'] / len +
+                            previousValue.slide,
+                        lab: element['faculty_rating']['lab'] / len +
+                            previousValue.lab,
+                        syllabus: element['faculty_rating']['syllabus'] / len +
+                            previousValue.syllabus,
+                        interaction:
+                            element['faculty_rating']['interaction'] / len +
+                                previousValue.interaction,
+                      ));
+              loadedData.add(temp);
+            });
+            _ratings = loadedData;
+            notifyListeners();
+          }
+        } catch (error) {
+          throw error;
+        }
+        break;
     }
   }
 
@@ -240,15 +336,14 @@ class FacultyStudentList with ChangeNotifier {
     @required lab,
     @required syllabus,
     @required interaction,
-    @required comment,
   }) async {
     try {
       final response = await connection.mappedResultsQuery(
         '''
       insert into faculty_rating
-      values (@facultyid, @studentid, @lecture, @demo, @slide, @lab, @syllabus, @interaction, @comment)
+      values (@facultyid, @studentid, @lecture, @demo, @slide, @lab, @syllabus, @interaction)
       on conflict (facultyid, studentid) do UPDATE
-      set facultyid = @facultyid, studentid = @studentid, lecture = @lecture, demo = @demo, slide = @slide, lab = @lab, syllabus = @syllabus, interaction = @interaction, comment = @comment
+      set facultyid = @facultyid, studentid = @studentid, lecture = @lecture, demo = @demo, slide = @slide, lab = @lab, syllabus = @syllabus, interaction = @interaction
       returning *
       ''',
         substitutionValues: {
@@ -260,7 +355,6 @@ class FacultyStudentList with ChangeNotifier {
           'lab': lab,
           'syllabus': syllabus,
           'interaction': interaction,
-          'comment': comment,
         },
       );
       if (response.isNotEmpty) {
@@ -270,14 +364,12 @@ class FacultyStudentList with ChangeNotifier {
           name: _ratings[_prevRatingIndex].name,
           course: _ratings[_prevRatingIndex].course,
           facultyid: facultyid,
-          studentid: studentid,
           lecture: lecture,
           demo: demo,
           slide: slide,
           lab: lab,
           syllabus: syllabus,
           interaction: interaction,
-          comment: comment,
         );
         notifyListeners();
       }
