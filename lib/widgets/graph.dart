@@ -1,5 +1,6 @@
-import '../import.dart';
 import 'package:fl_chart/fl_chart.dart';
+
+import '../import.dart';
 
 class Graph extends StatelessWidget {
   final FacultyRating data;
@@ -12,7 +13,7 @@ class Graph extends StatelessWidget {
         Colors.blueGrey.shade500,
         Colors.blueGrey.shade600,
       ],
-      y: val,
+      y: double.parse(val.toStringAsFixed(1)),
       width: 20,
       borderRadius: BorderRadius.only(
         topLeft: Radius.circular(6),

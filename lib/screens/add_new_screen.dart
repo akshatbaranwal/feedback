@@ -160,6 +160,17 @@ class _AddNewState extends State<AddNew> {
     }
   }
 
+  Slider _slider(val, fn) {
+    return Slider(
+      value: val,
+      min: 0,
+      max: 100,
+      divisions: 100,
+      label: val.toString(),
+      onChanged: fn,
+    );
+  }
+
   Widget _ratingBuilder() {
     return ListView(
       children: [
@@ -206,108 +217,66 @@ class _AddNewState extends State<AddNew> {
                   fontSize: 16,
                 ),
               ),
-              Slider(
-                value: _lecture,
-                min: 0,
-                max: 100,
-                divisions: 100,
-                label: _lecture.toString(),
-                onChanged: (value) {
-                  setState(() {
-                    _lecture = value;
-                  });
-                },
-              ),
+              _slider(_lecture, (value) {
+                setState(() {
+                  _lecture = value;
+                });
+              }),
               Text(
                 'Demo $_demo',
                 style: TextStyle(
                   fontSize: 16,
                 ),
               ),
-              Slider(
-                value: _demo,
-                min: 0,
-                max: 100,
-                divisions: 100,
-                label: _demo.toString(),
-                onChanged: (value) {
-                  setState(() {
-                    _demo = value;
-                  });
-                },
-              ),
+              _slider(_demo, (value) {
+                setState(() {
+                  _demo = value;
+                });
+              }),
               Text(
                 'Slides: $_slide',
                 style: TextStyle(
                   fontSize: 16,
                 ),
               ),
-              Slider(
-                value: _slide,
-                min: 0,
-                max: 100,
-                divisions: 100,
-                label: _slide.toString(),
-                onChanged: (value) {
-                  setState(() {
-                    _slide = value;
-                  });
-                },
-              ),
+              _slider(_slide, (value) {
+                setState(() {
+                  _slide = value;
+                });
+              }),
               Text(
                 'Lab: $_lab',
                 style: TextStyle(
                   fontSize: 16,
                 ),
               ),
-              Slider(
-                value: _lab,
-                min: 0,
-                max: 100,
-                divisions: 100,
-                label: _lab.toString(),
-                onChanged: (value) {
-                  setState(() {
-                    _lab = value;
-                  });
-                },
-              ),
+              _slider(_lab, (value) {
+                setState(() {
+                  _lab = value;
+                });
+              }),
               Text(
                 'Syllabus: $_syllabus',
                 style: TextStyle(
                   fontSize: 16,
                 ),
               ),
-              Slider(
-                value: _syllabus,
-                min: 0,
-                max: 100,
-                divisions: 100,
-                label: _syllabus.toString(),
-                onChanged: (value) {
-                  setState(() {
-                    _syllabus = value;
-                  });
-                },
-              ),
+              _slider(_syllabus, (value) {
+                setState(() {
+                  _syllabus = value;
+                });
+              }),
               Text(
                 'Interaction: $_interaction',
                 style: TextStyle(
                   fontSize: 16,
                 ),
               ),
-              Slider(
-                value: _interaction,
-                min: 0,
-                max: 100,
-                divisions: 100,
-                label: _interaction.toString(),
-                onChanged: (value) {
-                  setState(() {
-                    _interaction = value;
-                  });
-                },
-              ),
+              _slider(_interaction, (value) {
+                setState(() {
+                  _interaction = value;
+                });
+              }),
               ElevatedButton.icon(
                 onPressed: _saveRating,
                 icon: Icon(Icons.done),

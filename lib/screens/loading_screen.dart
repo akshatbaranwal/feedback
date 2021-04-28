@@ -1,6 +1,3 @@
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-
 import '../import.dart';
 
 class Loading extends StatefulWidget {
@@ -16,11 +13,13 @@ class _LoadingState extends State<Loading> {
 
   Future<void> _connect() async {
     await widget.connection.open();
-    await Provider.of<StudentData>(context, listen: false).fetchEmails();
-    await Provider.of<StudentData>(context, listen: false).fetchBranches();
-    await Provider.of<FacultyData>(context, listen: false).fetchEmails();
-    await Provider.of<FacultyData>(context, listen: false).fetchCourses();
-    await Provider.of<AdminData>(context, listen: false).fetchEmails();
+    await Future.wait([
+      Provider.of<StudentData>(context, listen: false).fetchEmails(),
+      Provider.of<StudentData>(context, listen: false).fetchBranches(),
+      Provider.of<FacultyData>(context, listen: false).fetchEmails(),
+      Provider.of<FacultyData>(context, listen: false).fetchCourses(),
+      Provider.of<AdminData>(context, listen: false).fetchEmails(),
+    ]);
     await Navigator.of(context).pushReplacementNamed(LoginScreen.routeName);
     await widget.connection.close();
     SystemNavigator.pop();
@@ -38,19 +37,35 @@ class _LoadingState extends State<Loading> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Feedback\nManagement\nSystem',
-              style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.w300,
+      body: Column(
+        children: [
+          SizedBox(height: 100),
+          Expanded(
+            child: Center(
+              child: Text(
+                'Feedback\nManagement\nSystem',
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w300,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+          Text(
+            'Initializing...',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w300,
+            ),
+          ),
+          SizedBox(height: 15),
+          SizedBox(
+            height: 2,
+            width: 150,
+            child: LinearProgressIndicator(),
+          ),
+          SizedBox(height: 80),
+        ],
       ),
     );
   }

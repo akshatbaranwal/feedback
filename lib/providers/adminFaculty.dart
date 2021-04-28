@@ -64,8 +64,8 @@ class AdminFacultyList with ChangeNotifier {
                 'facultyid': facultyid,
               },
             );
+      final List<AdminFaculty> loadedData = [];
       if (response.isNotEmpty) {
-        final List<AdminFaculty> loadedData = [];
         response.forEach((val) {
           loadedData.add(AdminFaculty(
             id: val['admin_faculty']['id'],
@@ -75,16 +75,16 @@ class AdminFacultyList with ChangeNotifier {
             type: val['admin_faculty']['type'],
             subject: val['admin_faculty']['subject'],
             body: val['admin_faculty']['body'],
-            createdAt: val['admin_faculty']['created_at'],
-            modifiedAt: val['admin_faculty']['modified_at'],
+            createdAt: val['admin_faculty']['created_at']?.toLocal(),
+            modifiedAt: val['admin_faculty']['modified_at']?.toLocal(),
             reply: val['faculty_admin']['reply'],
-            replyCreatedAt: val['faculty_admin']['created_at'],
-            replyModifiedAt: val['faculty_admin']['modified_at'],
+            replyCreatedAt: val['faculty_admin']['created_at']?.toLocal(),
+            replyModifiedAt: val['faculty_admin']['modified_at']?.toLocal(),
           ));
         });
-        _items = loadedData;
-        notifyListeners();
       }
+      _items = loadedData;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
@@ -119,8 +119,9 @@ class AdminFacultyList with ChangeNotifier {
           createdAt: _items[index].createdAt,
           modifiedAt: _items[index].modifiedAt,
           reply: response[0]['faculty_admin']['reply'],
-          replyCreatedAt: response[0]['faculty_admin']['created_at'],
-          replyModifiedAt: response[0]['faculty_admin']['modified_at'],
+          replyCreatedAt: response[0]['faculty_admin']['created_at']?.toLocal(),
+          replyModifiedAt:
+              response[0]['faculty_admin']['modified_at']?.toLocal(),
         );
         notifyListeners();
       }
@@ -163,8 +164,8 @@ class AdminFacultyList with ChangeNotifier {
           type: response[0]['admin_faculty']['type'],
           subject: response[0]['admin_faculty']['subject'],
           body: response[0]['admin_faculty']['body'],
-          createdAt: response[0]['admin_faculty']['created_at'],
-          modifiedAt: response[0]['admin_faculty']['modified_at'],
+          createdAt: response[0]['admin_faculty']['created_at']?.toLocal(),
+          modifiedAt: response[0]['admin_faculty']['modified_at']?.toLocal(),
           reply: null,
           replyCreatedAt: null,
           replyModifiedAt: null,
@@ -174,5 +175,9 @@ class AdminFacultyList with ChangeNotifier {
     } catch (error) {
       throw (error);
     }
+  }
+
+  void logout() {
+    _items = [];
   }
 }

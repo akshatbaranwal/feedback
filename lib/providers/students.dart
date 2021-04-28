@@ -35,14 +35,16 @@ class StudentData with ChangeNotifier {
   }
 
   Student get data {
-    return Student(
-      branchid: _data.branchid,
-      email: _data.email,
-      enroll: _data.enroll,
-      name: _data.name,
-      studentid: _data.studentid,
-      year: _data.year,
-    );
+    return _data == null
+        ? null
+        : Student(
+            branchid: _data.branchid,
+            email: _data.email,
+            enroll: _data.enroll,
+            name: _data.name,
+            studentid: _data.studentid,
+            year: _data.year,
+          );
   }
 
   Future<void> fetchBranches() async {
@@ -51,14 +53,14 @@ class StudentData with ChangeNotifier {
       select *
       from branch
       ''');
+      final loadedBranches = [];
       if (response.isNotEmpty) {
-        final loadedBranches = [];
         response.forEach((val) {
           loadedBranches.add([val[0], val[1]]);
         });
-        _branchList = loadedBranches;
-        notifyListeners();
       }
+      _branchList = loadedBranches;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
@@ -70,14 +72,14 @@ class StudentData with ChangeNotifier {
       select email 
       from student
       ''');
+      final loadedEmails = [];
       if (response.isNotEmpty) {
-        final loadedEmails = [];
         response.forEach((val) {
           loadedEmails.add(val[0]);
         });
-        _emailList = loadedEmails;
-        notifyListeners();
       }
+      _emailList = loadedEmails;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
@@ -100,8 +102,9 @@ class StudentData with ChangeNotifier {
           'password': password,
         },
       );
+      Student temp;
       if (response.isNotEmpty) {
-        _data = Student(
+        temp = Student(
           studentid: response[0][0],
           enroll: response[0][1],
           email: response[0][2],
@@ -109,8 +112,9 @@ class StudentData with ChangeNotifier {
           branchid: response[0][4],
           year: response[0][5],
         );
-        notifyListeners();
       }
+      _data = temp;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
@@ -140,11 +144,75 @@ class StudentData with ChangeNotifier {
           'year': year,
         },
       );
+      Student temp;
       if (response.isNotEmpty) {
-        _data = Student(
+        temp = Student(
           studentid: response[0][0],
           enroll: response[0][1],
           email: response[0][2],
+          name: response[0][4],
+          branchid: response[0][5],
+          year: response[0][6],
+        );
+        _emailList.add(temp.email);
+      }
+      _data = temp;
+      notifyListeners();
+    } catch (error) {
+      throw (error);
+    }
+  }
+
+  Future<void> delete() async {
+    try {
+      await connection.query(
+        '''
+      delete
+      from student
+      where studentid = @studentid
+      ''',
+        substitutionValues: {
+          'studentid': _data.studentid,
+        },
+      );
+      _emailList.remove(_data.email);
+      _data = null;
+      notifyListeners();
+    } catch (error) {
+      throw (error);
+    }
+  }
+
+  Future<void> updateDetails({
+    @required enroll,
+    @required name,
+    @required branchid,
+    @required year,
+  }) async {
+    try {
+      final response = await connection.query(
+        '''
+    update student
+    set enroll = @enroll, 
+        name = @name, 
+        branchid = @branchid, 
+        year = @year
+    where studentid = @studentid
+    returning *
+    ''',
+        substitutionValues: {
+          'studentid': _data.studentid,
+          'enroll': enroll,
+          'name': name,
+          'branchid': branchid,
+          'year': year,
+        },
+      );
+      if (response.isNotEmpty) {
+        _data = Student(
+          studentid: _data.studentid,
+          enroll: response[0][1],
+          email: _data.email,
           name: response[0][4],
           branchid: response[0][5],
           year: response[0][6],
@@ -156,25 +224,25 @@ class StudentData with ChangeNotifier {
     }
   }
 
-  Future<void> edit({
-    @required id,
-    @required password,
-  }) async {
+  Future<void> updatePassword(password) async {
     try {
       await connection.query(
         '''
       update student
       set password = crypt(@password, gen_salt('bf'))
-      where id = @id
+      where studentid = @studentid
       ''',
         substitutionValues: {
-          'id': id,
+          'studentid': _data.studentid,
           'password': password,
         },
       );
-      notifyListeners();
     } catch (error) {
       throw (error);
     }
+  }
+
+  void logout() {
+    _data = null;
   }
 }

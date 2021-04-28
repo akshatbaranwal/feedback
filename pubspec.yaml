@@ -40,7 +40,7 @@ dev_dependencies:
     sdk: flutter
 
 flutter_icons:
-  image_path: "assets/images/feedback.png"
+  image_path: "assets/images/feedback2.png"
   android: true
   ios: true
 

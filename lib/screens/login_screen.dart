@@ -68,53 +68,61 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _login
-              ? 'Login'
-              : _user == User.admin
-                  ? 'Admin Register'
-                  : _user == User.faculty
-                      ? 'Faculty Register'
-                      : 'Student Register',
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _login
-                ? Login()
+    return WillPopScope(
+      onWillPop: () async {
+        return showDialog(
+          context: context,
+          builder: (_) => ConfirmExit(),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            _login
+                ? 'Login'
                 : _user == User.admin
-                    ? AdminRegister()
+                    ? 'Admin Register'
                     : _user == User.faculty
-                        ? FacultyRegister()
-                        : StudentRegister(),
+                        ? 'Faculty Register'
+                        : 'Student Register',
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(_login
-                  ? "Don't have an account yet? "
-                  : 'Already have an account? '),
-              TextButton(
-                onPressed: _login
-                    ? () async {
-                        await _chooseUser();
-                      }
-                    : () {
-                        setState(() {
-                          _login = true;
-                        });
-                      },
-                child: Text(_login ? 'Register here' : 'Login here'),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 10,
-          ),
-        ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: _login
+                  ? Login()
+                  : _user == User.admin
+                      ? AdminForm()
+                      : _user == User.faculty
+                          ? FacultyForm()
+                          : StudentForm(),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(_login
+                    ? "Don't have an account yet? "
+                    : 'Already have an account? '),
+                TextButton(
+                  onPressed: _login
+                      ? () {
+                          _chooseUser();
+                        }
+                      : () {
+                          setState(() {
+                            _login = true;
+                          });
+                        },
+                  child: Text(_login ? 'Register here' : 'Login here'),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 10,
+            ),
+          ],
+        ),
       ),
     );
   }

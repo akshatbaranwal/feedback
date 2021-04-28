@@ -68,8 +68,8 @@ class AdminStudentList with ChangeNotifier {
                 'studentid': studentid,
               },
             );
+      final List<AdminStudent> loadedData = [];
       if (response.isNotEmpty) {
-        final List<AdminStudent> loadedData = [];
         response.forEach((val) {
           loadedData.add(AdminStudent(
             id: val['admin_student']['id'],
@@ -80,16 +80,16 @@ class AdminStudentList with ChangeNotifier {
             type: val['admin_student']['type'],
             subject: val['admin_student']['subject'],
             body: val['admin_student']['body'],
-            createdAt: val['admin_student']['created_at'],
-            modifiedAt: val['admin_student']['modified_at'],
+            createdAt: val['admin_student']['created_at']?.toLocal(),
+            modifiedAt: val['admin_student']['modified_at']?.toLocal(),
             reply: val['student_admin']['reply'],
-            replyCreatedAt: val['student_admin']['created_at'],
-            replyModifiedAt: val['student_admin']['modified_at'],
+            replyCreatedAt: val['student_admin']['created_at']?.toLocal(),
+            replyModifiedAt: val['student_admin']['modified_at']?.toLocal(),
           ));
         });
-        _items = loadedData;
-        notifyListeners();
       }
+      _items = loadedData;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
@@ -125,8 +125,9 @@ class AdminStudentList with ChangeNotifier {
           createdAt: _items[index].createdAt,
           modifiedAt: _items[index].modifiedAt,
           reply: response[0]['student_admin']['reply'],
-          replyCreatedAt: response[0]['student_admin']['created_at'],
-          replyModifiedAt: response[0]['student_admin']['modified_at'],
+          replyCreatedAt: response[0]['student_admin']['created_at']?.toLocal(),
+          replyModifiedAt:
+              response[0]['student_admin']['modified_at']?.toLocal(),
         );
         notifyListeners();
       }
@@ -171,8 +172,8 @@ class AdminStudentList with ChangeNotifier {
           type: response[0]['admin_student']['type'],
           subject: response[0]['admin_student']['subject'],
           body: response[0]['admin_student']['body'],
-          createdAt: response[0]['admin_student']['created_at'],
-          modifiedAt: response[0]['admin_student']['modified_at'],
+          createdAt: response[0]['admin_student']['created_at']?.toLocal(),
+          modifiedAt: response[0]['admin_student']['modified_at']?.toLocal(),
           reply: null,
           replyCreatedAt: null,
           replyModifiedAt: null,
@@ -182,5 +183,9 @@ class AdminStudentList with ChangeNotifier {
     } catch (error) {
       throw (error);
     }
+  }
+
+  void logout() {
+    _items = [];
   }
 }

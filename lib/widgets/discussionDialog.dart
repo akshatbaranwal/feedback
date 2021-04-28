@@ -43,26 +43,30 @@ class _DiscussionDialogState extends State<DiscussionDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.to == User.admin
-                    ? 'Admin'
-                    : widget.to == User.faculty
-                        ? widget.item.facultyname
-                        : widget.item.studentname,
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
+              Center(
+                child: Text(
+                  widget.to == User.admin
+                      ? 'Admin'
+                      : widget.to == User.faculty
+                          ? widget.item.facultyname
+                          : widget.item.studentname,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               if (widget.to != User.admin) ...[
                 SizedBox(height: 2),
-                Text(
-                  widget.to == User.faculty
-                      ? widget.item.facultyemail
-                      : widget.item.studentemail,
-                  style: TextStyle(
-                    color: Colors.black38,
-                    fontSize: 12,
+                Center(
+                  child: Text(
+                    widget.to == User.faculty
+                        ? widget.item.facultyemail
+                        : widget.item.studentemail,
+                    style: TextStyle(
+                      color: Colors.black38,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
@@ -129,22 +133,25 @@ class _DiscussionDialogState extends State<DiscussionDialog> {
                         padding: const EdgeInsets.all(0),
                         alignment: Alignment.centerRight,
                         onPressed: () {
-                          if (widget.from == User.faculty)
-                            _facultyStudent.reply(
-                              reply: _replyController.text,
-                              id: widget.item.id,
-                            );
-                          else if (widget.to == User.faculty)
-                            _adminFaculty.reply(
-                              reply: _replyController.text,
-                              id: widget.item.id,
-                            );
-                          else
-                            _adminStudent.reply(
-                              reply: _replyController.text,
-                              id: widget.item.id,
-                            );
-                          Navigator.of(context).pop();
+                          if (_replyController.text.trim() != '' &&
+                              _replyController.text != null) {
+                            if (widget.from == User.faculty)
+                              _facultyStudent.reply(
+                                reply: _replyController.text,
+                                id: widget.item.id,
+                              );
+                            else if (widget.to == User.faculty)
+                              _adminFaculty.reply(
+                                reply: _replyController.text,
+                                id: widget.item.id,
+                              );
+                            else
+                              _adminStudent.reply(
+                                reply: _replyController.text,
+                                id: widget.item.id,
+                              );
+                            Navigator.of(context).pop();
+                          }
                         },
                         icon: Icon(Icons.send),
                         color: Colors.blueGrey,

@@ -31,12 +31,14 @@ class FacultyData with ChangeNotifier {
   }
 
   Faculty get data {
-    return Faculty(
-      courseid: _data.courseid,
-      email: _data.email,
-      facultyid: _data.facultyid,
-      name: _data.name,
-    );
+    return _data == null
+        ? null
+        : Faculty(
+            courseid: _data.courseid,
+            email: _data.email,
+            facultyid: _data.facultyid,
+            name: _data.name,
+          );
   }
 
   Future<void> fetchCourses() async {
@@ -45,14 +47,14 @@ class FacultyData with ChangeNotifier {
       select *
       from course
       ''');
+      final loadedCourses = [];
       if (response.isNotEmpty) {
-        final loadedCourses = [];
         response.forEach((val) {
           loadedCourses.add([val[0], val[1]]);
         });
-        _courseList = loadedCourses;
-        notifyListeners();
       }
+      _courseList = loadedCourses;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
@@ -63,14 +65,14 @@ class FacultyData with ChangeNotifier {
       final response = await connection.query('''
       select email from faculty
       ''');
+      final loadedEmails = [];
       if (response.isNotEmpty) {
-        final loadedEmails = [];
         response.forEach((element) {
           loadedEmails.add(element[0]);
         });
-        _emailList = loadedEmails;
-        notifyListeners();
       }
+      _emailList = loadedEmails;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
@@ -93,12 +95,16 @@ class FacultyData with ChangeNotifier {
           'password': password,
         },
       );
-      _data = Faculty(
-        facultyid: response[0][0],
-        email: response[0][1],
-        name: response[0][2],
-        courseid: response[0][3],
-      );
+      Faculty temp;
+      if (response.isNotEmpty) {
+        temp = Faculty(
+          facultyid: response[0][0],
+          email: response[0][1],
+          name: response[0][2],
+          courseid: response[0][3],
+        );
+      }
+      _data = temp;
       notifyListeners();
     } catch (error) {
       throw (error);
@@ -125,10 +131,46 @@ class FacultyData with ChangeNotifier {
           'courseid': courseid,
         },
       );
+      Faculty temp;
       if (response.isNotEmpty) {
-        _data = Faculty(
+        temp = Faculty(
           facultyid: response[0][0],
           email: response[0][1],
+          name: response[0][3],
+          courseid: response[0][4],
+        );
+        _emailList.add(temp.email);
+      }
+      _data = temp;
+      notifyListeners();
+    } catch (error) {
+      throw (error);
+    }
+  }
+
+  Future<void> updateDetails({
+    @required name,
+    @required courseid,
+  }) async {
+    try {
+      final response = await connection.query(
+        '''
+    update faculty
+    set name = @name,
+        courseid = @courseid
+    where facultyid = @facultyid
+    returning *
+    ''',
+        substitutionValues: {
+          'name': name,
+          'facultyid': _data.facultyid,
+          'courseid': courseid,
+        },
+      );
+      if (response.isNotEmpty) {
+        _data = Faculty(
+          facultyid: _data.facultyid,
+          email: _data.email,
           name: response[0][3],
           courseid: response[0][4],
         );
@@ -139,25 +181,45 @@ class FacultyData with ChangeNotifier {
     }
   }
 
-  Future<void> edit({
-    @required id,
-    @required password,
-  }) async {
+  Future<void> delete() async {
+    try {
+      await connection.query(
+        '''
+      delete
+      from faculty
+      where facultyid = @facultyid
+      ''',
+        substitutionValues: {
+          'facultyid': _data.facultyid,
+        },
+      );
+      _emailList.remove(_data.email);
+      _data = null;
+      notifyListeners();
+    } catch (error) {
+      throw (error);
+    }
+  }
+
+  Future<void> updatePassword(password) async {
     try {
       await connection.query(
         '''
       update faculty
       set password = crypt(@password, gen_salt('bf'))
-      where id = @id
+      where facultyid = @facultyid
       ''',
         substitutionValues: {
-          'id': id,
+          'facultyid': _data.facultyid,
           'password': password,
         },
       );
-      notifyListeners();
     } catch (error) {
       throw (error);
     }
+  }
+
+  void logout() {
+    _data = null;
   }
 }

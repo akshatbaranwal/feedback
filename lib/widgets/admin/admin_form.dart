@@ -1,14 +1,14 @@
 import '../../import.dart';
 
-class FacultyRegister extends StatefulWidget {
+class AdminForm extends StatefulWidget {
   @override
-  _FacultyRegisterState createState() => _FacultyRegisterState();
+  _AdminFormState createState() => _AdminFormState();
 }
 
-class _FacultyRegisterState extends State<FacultyRegister> {
+class _AdminFormState extends State<AdminForm> {
   final _form = GlobalKey<FormState>();
   bool _hidePassword = true;
-  String _email, _password, _name, _courseid;
+  String _email, _password;
   StudentData student;
   FacultyData faculty;
   AdminData admin;
@@ -18,18 +18,16 @@ class _FacultyRegisterState extends State<FacultyRegister> {
     if (!isValid) return;
     _form.currentState.save();
     try {
-      await faculty.register(
-        name: _name,
-        courseid: _courseid,
+      await admin.register(
         email: _email,
         password: _password,
       );
-      if (faculty.data == null) {
+      if (admin.data == null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Invalid Password'),
+          content: Text('Something went wrong'),
         ));
       } else {
-        Navigator.of(context).pushNamed(FacultyDashboard.routeName);
+        Navigator.of(context).pushNamed(AdminDashboard.routeName);
       }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -44,32 +42,13 @@ class _FacultyRegisterState extends State<FacultyRegister> {
     faculty = Provider.of<FacultyData>(context);
     admin = Provider.of<AdminData>(context);
     return Padding(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: Form(
         key: _form,
         child: ListView(
           children: [
             SizedBox(
               height: 20,
-            ),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Name',
-                hintText: 'Enter your full name',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
-              ),
-              textInputAction: TextInputAction.next,
-              validator: (name) {
-                if (name.isEmpty) return 'Enter your name';
-                return null;
-              },
-              onSaved: (name) {
-                _name = name;
-              },
-            ),
-            SizedBox(
-              height: 15,
             ),
             TextFormField(
               decoration: InputDecoration(
@@ -83,12 +62,12 @@ class _FacultyRegisterState extends State<FacultyRegister> {
                 if (email.isEmpty) return 'Enter the email';
                 if (!email.endsWith('@iiita.ac.in'))
                   return 'Domain must be @iiita.ac.in';
-                if (student.emailList.contains(email))
-                  return 'Email already registered';
                 if (admin.emailList.contains(email))
-                  return 'Email registered as admin';
+                  return 'Email already registered';
                 if (faculty.emailList.contains(email))
                   return 'Email registered as faculty';
+                if (student.emailList.contains(email))
+                  return 'Email registered as student';
                 return null;
               },
               onSaved: (email) {
@@ -96,7 +75,7 @@ class _FacultyRegisterState extends State<FacultyRegister> {
               },
             ),
             SizedBox(
-              height: 15,
+              height: 20,
             ),
             TextFormField(
               obscureText: _hidePassword,
@@ -116,7 +95,7 @@ class _FacultyRegisterState extends State<FacultyRegister> {
                   },
                 ),
               ),
-              textInputAction: TextInputAction.next,
+              textInputAction: TextInputAction.done,
               validator: (password) {
                 if (password.isEmpty) return 'Enter the password';
                 return null;
@@ -124,38 +103,12 @@ class _FacultyRegisterState extends State<FacultyRegister> {
               onSaved: (password) {
                 _password = password;
               },
-            ),
-            SizedBox(
-              height: 15,
-            ),
-            DropdownButtonFormField(
-              isExpanded: true,
-              isDense: false,
-              itemHeight: 50,
-              menuMaxHeight: 500,
-              items: faculty.courseList
-                  .map((e) => DropdownMenuItem(
-                        child: Text(e[1]),
-                        value: e[0],
-                      ))
-                  .toList(),
-              onChanged: (_) {},
-              decoration: InputDecoration(
-                labelText: 'Course',
-                hintText: 'Choose your course',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.school),
-              ),
-              validator: (courseid) {
-                if (courseid == null) return 'Enter the course';
-                return null;
-              },
-              onSaved: (courseid) {
-                _courseid = courseid;
+              onFieldSubmitted: (_) {
+                _safeForm();
               },
             ),
             SizedBox(
-              height: 15,
+              height: 20,
             ),
             ElevatedButton(
               onPressed: () {

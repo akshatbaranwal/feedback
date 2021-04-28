@@ -1,4 +1,4 @@
-import 'package:feedback/import.dart';
+import '../import.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -25,7 +25,7 @@ class _LoginState extends State<Login> {
         );
         if (student.data == null) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Invalid Password'),
+            content: Text('Incorrect Password'),
           ));
         } else {
           Navigator.of(context).pushNamed(StudentDashboard.routeName);
@@ -43,7 +43,7 @@ class _LoginState extends State<Login> {
         );
         if (faculty.data == null) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Invalid Password'),
+            content: Text('Incorrect Password'),
           ));
         } else {
           Navigator.of(context).pushNamed(FacultyDashboard.routeName);
@@ -61,14 +61,14 @@ class _LoginState extends State<Login> {
         );
         if (admin.data == null) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Invalid Password'),
+            content: Text('Incorrect Password'),
           ));
         } else {
           Navigator.of(context).pushNamed(AdminDashboard.routeName);
         }
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Something went wrong'),
+          content: Text('Connection Error'),
         ));
       }
     }
@@ -80,7 +80,7 @@ class _LoginState extends State<Login> {
     faculty = Provider.of<FacultyData>(context);
     admin = Provider.of<AdminData>(context);
     return Padding(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: Form(
         key: _form,
         child: ListView(

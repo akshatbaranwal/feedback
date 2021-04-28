@@ -22,10 +22,12 @@ class AdminData with ChangeNotifier {
   }
 
   Admin get data {
-    return Admin(
-      adminid: _data.adminid,
-      email: _data.email,
-    );
+    return _data == null
+        ? null
+        : Admin(
+            adminid: _data.adminid,
+            email: _data.email,
+          );
   }
 
   Future<void> fetchEmails() async {
@@ -33,14 +35,14 @@ class AdminData with ChangeNotifier {
       final response = await connection.query('''
       select email from admin
       ''');
+      final loadedEmails = [];
       if (response.isNotEmpty) {
-        final loadedEmails = [];
         response.forEach((element) {
           loadedEmails.add(element[0]);
         });
-        _emailList = loadedEmails;
-        notifyListeners();
       }
+      _emailList = loadedEmails;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
@@ -63,13 +65,15 @@ class AdminData with ChangeNotifier {
           'password': password,
         },
       );
+      Admin temp;
       if (response.isNotEmpty) {
-        _data = Admin(
+        temp = Admin(
           adminid: response[0][0],
           email: response[0][1],
         );
-        notifyListeners();
       }
+      _data = temp;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
@@ -91,37 +95,60 @@ class AdminData with ChangeNotifier {
           'password': password,
         },
       );
+      Admin temp;
       if (response.isNotEmpty) {
-        _data = Admin(
+        temp = Admin(
           adminid: response[0][0],
           email: response[0][1],
         );
-        notifyListeners();
+        _emailList.add(temp.email);
       }
+      _data = temp;
+      notifyListeners();
     } catch (error) {
       throw (error);
     }
   }
 
-  Future<void> edit({
-    @required id,
-    @required password,
-  }) async {
+  Future<void> delete() async {
+    try {
+      await connection.query(
+        '''
+      delete
+      from admin
+      where adminid = @adminid
+      ''',
+        substitutionValues: {
+          'adminid': _data.adminid,
+        },
+      );
+      _emailList.remove(_data.email);
+      _data = null;
+      notifyListeners();
+    } catch (error) {
+      throw (error);
+    }
+  }
+
+  Future<void> updatePassword(password) async {
     try {
       await connection.query(
         '''
       update admin
       set password = crypt(@password, gen_salt('bf'))
-      where id = @id
+      where adminid = @adminid
       ''',
         substitutionValues: {
-          'id': id,
+          'adminid': _data.adminid,
           'password': password,
         },
       );
-      notifyListeners();
     } catch (error) {
       throw (error);
     }
+  }
+
+  void logout() {
+    _data = null;
   }
 }

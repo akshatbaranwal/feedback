@@ -107,8 +107,8 @@ class FacultyStudentList with ChangeNotifier {
     ''', substitutionValues: {
                 'facultyid': id,
               });
+        final List<FacultyStudent> loadedData = [];
         if (response.isNotEmpty) {
-          final List<FacultyStudent> loadedData = [];
           response.forEach((val) {
             loadedData.add(FacultyStudent(
               id: val['faculty_student']['id'],
@@ -120,16 +120,16 @@ class FacultyStudentList with ChangeNotifier {
               facultyname: val['faculty']['name'],
               subject: val['faculty_student']['subject'],
               body: val['faculty_student']['body'],
-              createdAt: val['faculty_student']['created_at'],
-              modifiedAt: val['faculty_student']['modified_at'],
+              createdAt: val['faculty_student']['created_at']?.toLocal(),
+              modifiedAt: val['faculty_student']['modified_at']?.toLocal(),
               reply: val['student_faculty']['reply'],
-              replyCreatedAt: val['student_faculty']['created_at'],
-              replyModifiedAt: val['student_faculty']['modified_at'],
+              replyCreatedAt: val['student_faculty']['created_at']?.toLocal(),
+              replyModifiedAt: val['student_faculty']['modified_at']?.toLocal(),
             ));
           });
-          _items = loadedData;
-          notifyListeners();
         }
+        _items = loadedData;
+        notifyListeners();
       } catch (error) {
         throw (error);
       }
@@ -151,8 +151,8 @@ class FacultyStudentList with ChangeNotifier {
               'studentid': id,
             },
           );
+          final List<FacultyRating> loadedData = [];
           if (response.isNotEmpty) {
-            final List<FacultyRating> loadedData = [];
             response.forEach((val) {
               loadedData.add(FacultyRating(
                 name: val['faculty']['name'],
@@ -166,9 +166,9 @@ class FacultyStudentList with ChangeNotifier {
                 interaction: val['faculty_rating']['interaction'],
               ));
             });
-            _ratings = loadedData;
-            notifyListeners();
           }
+          _ratings = loadedData;
+          notifyListeners();
         } catch (error) {
           throw error;
         }
@@ -221,8 +221,9 @@ class FacultyStudentList with ChangeNotifier {
               ),
             );
             _ratings = [result];
-            notifyListeners();
-          }
+          } else
+            _ratings = [];
+          notifyListeners();
         } catch (error) {
           throw error;
         }
@@ -236,6 +237,7 @@ class FacultyStudentList with ChangeNotifier {
     join faculty using(facultyid)
     join course using(courseid)
     ''');
+          final List<FacultyRating> loadedData = [];
           if (response.isNotEmpty) {
             var initialValue = FacultyRating(
               name: '',
@@ -251,7 +253,6 @@ class FacultyStudentList with ChangeNotifier {
             int len;
             var result =
                 groupBy(response, (obj) => obj['faculty_rating']['facultyid']);
-            final List<FacultyRating> loadedData = [];
             result.forEach((key, value) {
               len = value.length;
               FacultyRating temp = value.fold(
@@ -276,9 +277,9 @@ class FacultyStudentList with ChangeNotifier {
                       ));
               loadedData.add(temp);
             });
-            _ratings = loadedData;
-            notifyListeners();
           }
+          _ratings = loadedData;
+          notifyListeners();
         } catch (error) {
           throw error;
         }
@@ -317,8 +318,10 @@ class FacultyStudentList with ChangeNotifier {
           createdAt: _items[index].createdAt,
           modifiedAt: _items[index].modifiedAt,
           reply: response[0]['student_faculty']['reply'],
-          replyCreatedAt: response[0]['student_faculty']['created_at'],
-          replyModifiedAt: response[0]['student_faculty']['modified_at'],
+          replyCreatedAt:
+              response[0]['student_faculty']['created_at']?.toLocal(),
+          replyModifiedAt:
+              response[0]['student_faculty']['modified_at']?.toLocal(),
         );
         notifyListeners();
       }
@@ -416,8 +419,8 @@ class FacultyStudentList with ChangeNotifier {
           facultyname: response[0]['faculty']['name'],
           subject: response[0]['faculty_student']['subject'],
           body: response[0]['faculty_student']['body'],
-          createdAt: response[0]['faculty_student']['created_at'],
-          modifiedAt: response[0]['faculty_student']['modified_at'],
+          createdAt: response[0]['faculty_student']['created_at']?.toLocal(),
+          modifiedAt: response[0]['faculty_student']['modified_at']?.toLocal(),
           reply: null,
           replyCreatedAt: null,
           replyModifiedAt: null,
@@ -427,5 +430,10 @@ class FacultyStudentList with ChangeNotifier {
     } catch (error) {
       throw (error);
     }
+  }
+
+  void logout() {
+    _items = [];
+    _ratings = [];
   }
 }
