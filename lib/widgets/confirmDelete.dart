@@ -1,10 +1,13 @@
 import '../import.dart';
 
-class ConfirmExit extends StatelessWidget {
+class ConfirmDelete extends StatelessWidget {
+  final Function del;
+  ConfirmDelete(this.del);
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Confirm Exit ?'),
+      title: Text('Confirm Delete ?'),
+      content: Text('All your data will be deleted.'),
       actions: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -13,7 +16,10 @@ class ConfirmExit extends StatelessWidget {
               child: TextButton(
                 child: Text(
                   'No',
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.green,
+                  ),
                 ),
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -24,11 +30,15 @@ class ConfirmExit extends StatelessWidget {
               child: TextButton(
                 child: Text(
                   'Yes',
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.red,
+                  ),
                 ),
                 onPressed: () {
+                  del();
                   Navigator.of(context)
-                      .popUntil(ModalRoute.withName(Loading.routeName));
+                      .popUntil(ModalRoute.withName(LoginScreen.routeName));
                 },
               ),
             ),

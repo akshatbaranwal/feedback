@@ -23,6 +23,9 @@ class _UpdateAccountState extends State<UpdateAccount> {
       if (_user == User.student) await _student.updatePassword(_password[0]);
       if (_user == User.faculty) await _faculty.updatePassword(_password[0]);
       if (_user == User.admin) await _admin.updatePassword(_password[0]);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Password updated'),
+      ));
       Navigator.of(context).pop();
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -135,7 +138,6 @@ class _UpdateAccountState extends State<UpdateAccount> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         title: Text(_updatePassword ? 'Change password' : 'Update Details'),
       ),
       body: _updatePassword

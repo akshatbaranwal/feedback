@@ -27,7 +27,8 @@ class AdminDashboardStudent extends StatelessWidget {
             ],
           )
         : ListView.builder(
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
             padding: const EdgeInsets.all(10),
             itemCount: items.length,
             itemBuilder: (ctx, index) => Card(

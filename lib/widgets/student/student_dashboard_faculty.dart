@@ -26,7 +26,8 @@ class _StudentDashboardFacultyState extends State<StudentDashboardFaculty> {
             ],
           )
         : ListView.builder(
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
             padding: const EdgeInsets.all(10),
             itemCount: _items.length,
             itemBuilder: (ctx, index) => Card(

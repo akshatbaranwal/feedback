@@ -8,12 +8,10 @@ class AdminDashboard extends StatefulWidget {
 
 class _AdminDashboardState extends State<AdminDashboard> {
   bool _isInit = true, _isLoading = false;
-  Type _type = Type.all;
+  List<Type> _type = [Type.all, Type.all];
   int _indexBottomNavBar = 0;
   AdminData _admin;
-  AdminFacultyList _adminFaculty;
-  AdminStudentList _adminStudent;
-  FacultyStudentList _facultyStudent;
+  Timer _timer;
 
   Future<void> _filter() async {
     return showDialog(
@@ -26,9 +24,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.all)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.all;
+                    _type[_indexBottomNavBar] = Type.all;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -38,9 +47,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.opinion)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.opinion;
+                    _type[_indexBottomNavBar] = Type.opinion;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -50,9 +70,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.request)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.request;
+                    _type[_indexBottomNavBar] = Type.request;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -62,9 +93,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.query)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.query;
+                    _type[_indexBottomNavBar] = Type.query;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -73,23 +115,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   style: TextStyle(fontSize: 17),
                 ),
               ),
-              if (_indexBottomNavBar == 0) ...[
-                SizedBox(height: 10),
-                Divider(),
-                SizedBox(height: 10),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _type = Type.rating;
-                    });
-                    Navigator.of(ctx).pop();
-                  },
-                  child: Text(
-                    'Performance',
-                    style: TextStyle(fontSize: 17),
-                  ),
-                ),
-              ],
             ],
           ),
         );
@@ -133,9 +158,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
               TextButton(
                 onPressed: () {
-                  _admin.delete();
-                  Navigator.of(ctx)
-                      .popUntil(ModalRoute.withName(LoginScreen.routeName));
+                  showDialog(
+                    context: context,
+                    builder: (_) => ConfirmDelete(_admin.delete),
+                  );
                 },
                 child: Text(
                   'Delete Account',
@@ -152,15 +178,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Future<void> _initialFetch() async {
-    await Provider.of<AdminFacultyList>(context, listen: false).fetch();
-    await Provider.of<AdminStudentList>(context, listen: false).fetch();
-    await Provider.of<FacultyStudentList>(context, listen: false).fetch(
-      from: User.admin,
-    );
-    setState(() {
-      _isLoading = false;
-    });
+  Future<void> _fetch() async {
+    await Future.wait([
+      Provider.of<AdminFacultyList>(context, listen: false).fetch(),
+      Provider.of<AdminStudentList>(context, listen: false).fetch(),
+      Provider.of<FacultyStudentList>(context, listen: false).fetch(
+        from: User.admin,
+      ),
+    ]);
   }
 
   @override
@@ -169,18 +194,29 @@ class _AdminDashboardState extends State<AdminDashboard> {
       setState(() {
         _isLoading = true;
       });
-      _initialFetch();
+      _fetch().then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+      _timer = Timer.periodic(
+        Duration(seconds: 5),
+        (_) => _fetch(),
+      );
       _isInit = false;
     }
     super.didChangeDependencies();
   }
 
   @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     _admin = Provider.of<AdminData>(context);
-    _adminFaculty = Provider.of<AdminFacultyList>(context);
-    _adminStudent = Provider.of<AdminStudentList>(context);
-    _facultyStudent = Provider.of<FacultyStudentList>(context);
 
     return WillPopScope(
       onWillPop: () async {
@@ -194,6 +230,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
           automaticallyImplyLeading: false,
           title: Text('Hey Admin!'),
           actions: [
+            if (_indexBottomNavBar == 0)
+              IconButton(
+                color: _type[0] == Type.rating ? Colors.white : Colors.white60,
+                onPressed: () {
+                  setState(() {
+                    if (_type[0] == Type.rating)
+                      _type[0] = Type.all;
+                    else
+                      _type[0] = Type.rating;
+                  });
+                },
+                icon: Icon(Icons.analytics_outlined),
+              ),
             IconButton(
               onPressed: () async {
                 _filter();
@@ -222,7 +271,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
-              _type = Type.all;
               _indexBottomNavBar = index;
             });
           },
@@ -236,20 +284,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 child: CircularProgressIndicator(),
               )
             : RefreshIndicator(
-                onRefresh: () async {
-                  await Future.wait(
-                    [
-                      _adminFaculty.fetch(),
-                      _adminStudent.fetch(),
-                      _facultyStudent.fetch(
-                        from: User.admin,
-                      ),
-                    ],
-                  );
-                },
+                onRefresh: () => _fetch(),
                 child: _indexBottomNavBar == 0
-                    ? AdminDashboardFaculty(_type)
-                    : AdminDashboardStudent(_type),
+                    ? AdminDashboardFaculty(_type[_indexBottomNavBar])
+                    : AdminDashboardStudent(_type[_indexBottomNavBar]),
               ),
       ),
     );

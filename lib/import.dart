@@ -1,10 +1,12 @@
 export 'package:flutter/material.dart';
 export 'package:provider/provider.dart';
 export 'package:flutter/services.dart';
+export 'dart:async';
 
 export 'widgets/login.dart';
 export 'widgets/graph.dart';
 export 'widgets/confirmExit.dart';
+export 'widgets/confirmDelete.dart';
 export 'widgets/discussionCard.dart';
 export 'widgets/discussionDialog.dart';
 export 'widgets/admin/admin_form.dart';

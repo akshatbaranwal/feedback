@@ -37,6 +37,10 @@ class _FacultyFormState extends State<FacultyForm> {
           content: Text('Something went wrong'),
         ));
       } else {
+        if (!_isNew)
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Update successful!'),
+          ));
         Navigator.of(context).pushNamed(FacultyDashboard.routeName);
       }
     } catch (error) {

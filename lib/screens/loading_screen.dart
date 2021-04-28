@@ -20,7 +20,7 @@ class _LoadingState extends State<Loading> {
       Provider.of<FacultyData>(context, listen: false).fetchCourses(),
       Provider.of<AdminData>(context, listen: false).fetchEmails(),
     ]);
-    await Navigator.of(context).pushReplacementNamed(LoginScreen.routeName);
+    await Navigator.of(context).pushNamed(LoginScreen.routeName);
     await widget.connection.close();
     SystemNavigator.pop();
   }
@@ -39,7 +39,7 @@ class _LoadingState extends State<Loading> {
     return Scaffold(
       body: Column(
         children: [
-          SizedBox(height: 100),
+          SizedBox(height: 70),
           Expanded(
             child: Center(
               child: Text(

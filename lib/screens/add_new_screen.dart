@@ -31,6 +31,10 @@ class _AddNewState extends State<AddNew> {
           subject: _subject,
           body: _body,
         );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('query added!'),
+          duration: Duration(seconds: 1),
+        ));
         Navigator.of(context).pop();
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -47,6 +51,10 @@ class _AddNewState extends State<AddNew> {
           subject: _subject,
           body: _body,
         );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${_type.toString().split('.').last} added!'),
+          duration: Duration(seconds: 1),
+        ));
         Navigator.of(context).pop();
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -63,6 +71,10 @@ class _AddNewState extends State<AddNew> {
           subject: _subject,
           body: _body,
         );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${_type.toString().split('.').last} added!'),
+          duration: Duration(seconds: 1),
+        ));
         Navigator.of(context).pop();
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -150,6 +162,10 @@ class _AddNewState extends State<AddNew> {
         syllabus: _syllabus,
         interaction: _interaction,
       );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Rating updated!'),
+        duration: Duration(seconds: 1),
+      ));
       Navigator.of(context).pop();
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -303,7 +319,13 @@ class _AddNewState extends State<AddNew> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add ${_type.toString().split('.').last}'),
+        title: Text(
+          _type == Type.rating
+              ? 'Add feedback'
+              : _type == Type.feedback
+                  ? 'Add query'
+                  : 'Add ${_type.toString().split('.').last}',
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),

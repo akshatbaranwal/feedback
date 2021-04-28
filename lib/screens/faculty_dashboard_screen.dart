@@ -8,12 +8,11 @@ class FacultyDashboard extends StatefulWidget {
 
 class _FacultyDashboardState extends State<FacultyDashboard> {
   bool _isInit = true, _isLoading = false;
-  Type _type = Type.all;
+  List<Type> _type = [Type.all, Type.feedback];
   FacultyData _faculty;
-  AdminFacultyList _adminFaculty;
-  FacultyStudentList _facultyStudent;
   List<FacultyRating> _rating;
   int _indexBottomNavBar = 0;
+  Timer _timer;
 
   Future<void> _add() {
     return showDialog(
@@ -86,9 +85,20 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.all)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.all;
+                    _type[_indexBottomNavBar] = Type.all;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -98,9 +108,20 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.opinion)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.opinion;
+                    _type[_indexBottomNavBar] = Type.opinion;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -110,9 +131,20 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.request)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.request;
+                    _type[_indexBottomNavBar] = Type.request;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -122,9 +154,20 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.query)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.query;
+                    _type[_indexBottomNavBar] = Type.query;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -189,13 +232,17 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
               ),
               TextButton(
                 onPressed: () {
-                  _faculty.delete();
-                  Navigator.of(ctx)
-                      .popUntil(ModalRoute.withName(LoginScreen.routeName));
+                  showDialog(
+                    context: context,
+                    builder: (_) => ConfirmDelete(_faculty.delete),
+                  );
                 },
                 child: Text(
                   'Delete Account',
-                  style: TextStyle(fontSize: 17),
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: Colors.red,
+                  ),
                 ),
               ),
             ],
@@ -205,18 +252,17 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
     );
   }
 
-  Future<void> _initialFetch() async {
-    var faculty = Provider.of<FacultyData>(context, listen: false);
-    await Provider.of<AdminFacultyList>(context, listen: false).fetch(
-      facultyid: faculty.data.facultyid,
-    );
-    await Provider.of<FacultyStudentList>(context, listen: false).fetch(
-      from: User.faculty,
-      id: faculty.data.facultyid,
-    );
-    setState(() {
-      _isLoading = false;
-    });
+  Future<void> _fetch() async {
+    int id = Provider.of<FacultyData>(context, listen: false).data.facultyid;
+    await Future.wait([
+      Provider.of<AdminFacultyList>(context, listen: false).fetch(
+        facultyid: id,
+      ),
+      Provider.of<FacultyStudentList>(context, listen: false).fetch(
+        from: User.faculty,
+        id: id,
+      ),
+    ]);
   }
 
   @override
@@ -225,16 +271,28 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
       setState(() {
         _isLoading = true;
       });
-      _initialFetch();
+      _fetch().then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+      _timer = Timer.periodic(
+        Duration(seconds: 5),
+        (_) => _fetch(),
+      );
       _isInit = false;
     }
     super.didChangeDependencies();
   }
 
   @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    _adminFaculty = Provider.of<AdminFacultyList>(context);
-    _facultyStudent = Provider.of<FacultyStudentList>(context);
     _rating = Provider.of<FacultyStudentList>(context).ratings;
     _faculty = Provider.of<FacultyData>(context);
 
@@ -314,7 +372,6 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
-              _type = index == 0 ? Type.all : Type.feedback;
               _indexBottomNavBar = index;
             });
           },
@@ -328,21 +385,9 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                 child: CircularProgressIndicator(),
               )
             : RefreshIndicator(
-                onRefresh: () async {
-                  await Future.wait(
-                    [
-                      _adminFaculty.fetch(
-                        facultyid: _faculty.data.facultyid,
-                      ),
-                      _facultyStudent.fetch(
-                        from: User.faculty,
-                        id: _faculty.data.facultyid,
-                      ),
-                    ],
-                  );
-                },
+                onRefresh: () => _fetch(),
                 child: _indexBottomNavBar == 0
-                    ? FacultyDashboardAdmin(_type)
+                    ? FacultyDashboardAdmin(_type[_indexBottomNavBar])
                     : FacultyDashboardStudent(),
               ),
       ),

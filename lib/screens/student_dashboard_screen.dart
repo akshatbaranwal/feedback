@@ -8,11 +8,10 @@ class StudentDashboard extends StatefulWidget {
 
 class _StudentDashboardState extends State<StudentDashboard> {
   bool _isInit = true, _isLoading = false;
-  Type _type = Type.all;
+  List<Type> _type = [Type.all, Type.feedback];
   StudentData _student;
-  AdminStudentList _adminStudent;
-  FacultyStudentList _facultyStudent;
   int _indexBottomNavBar = 0;
+  Timer _timer;
 
   Future<void> _add() {
     return showDialog(
@@ -118,9 +117,20 @@ class _StudentDashboardState extends State<StudentDashboard> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.all)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.all;
+                    _type[_indexBottomNavBar] = Type.all;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -130,9 +140,20 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.opinion)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.opinion;
+                    _type[_indexBottomNavBar] = Type.opinion;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -142,9 +163,20 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.request)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.request;
+                    _type[_indexBottomNavBar] = Type.request;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -154,9 +186,20 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 ),
               ),
               TextButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith((_) {
+                    if (_type[_indexBottomNavBar] == Type.query)
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.1);
+                    else
+                      return null;
+                  }),
+                ),
                 onPressed: () {
                   setState(() {
-                    _type = Type.query;
+                    _type[_indexBottomNavBar] = Type.query;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -221,13 +264,17 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
               TextButton(
                 onPressed: () {
-                  _student.delete();
-                  Navigator.of(ctx)
-                      .popUntil(ModalRoute.withName(LoginScreen.routeName));
+                  showDialog(
+                    context: context,
+                    builder: (_) => ConfirmDelete(_student.delete),
+                  );
                 },
                 child: Text(
                   'Delete Account',
-                  style: TextStyle(fontSize: 17),
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: Colors.red,
+                  ),
                 ),
               ),
             ],
@@ -237,18 +284,17 @@ class _StudentDashboardState extends State<StudentDashboard> {
     );
   }
 
-  Future<void> _initialFetch() async {
-    var student = Provider.of<StudentData>(context, listen: false);
-    await Provider.of<AdminStudentList>(context, listen: false).fetch(
-      studentid: student.data.studentid,
-    );
-    await Provider.of<FacultyStudentList>(context, listen: false).fetch(
-      from: User.student,
-      id: student.data.studentid,
-    );
-    setState(() {
-      _isLoading = false;
-    });
+  Future<void> _fetch() async {
+    int id = Provider.of<StudentData>(context, listen: false).data.studentid;
+    await Future.wait([
+      Provider.of<AdminStudentList>(context, listen: false).fetch(
+        studentid: id,
+      ),
+      Provider.of<FacultyStudentList>(context, listen: false).fetch(
+        from: User.student,
+        id: id,
+      ),
+    ]);
   }
 
   @override
@@ -257,16 +303,28 @@ class _StudentDashboardState extends State<StudentDashboard> {
       setState(() {
         _isLoading = true;
       });
-      _initialFetch();
+      _fetch().then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+      _timer = Timer.periodic(
+        Duration(seconds: 5),
+        (_) => _fetch(),
+      );
       _isInit = false;
     }
     super.didChangeDependencies();
   }
 
   @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    _adminStudent = Provider.of<AdminStudentList>(context);
-    _facultyStudent = Provider.of<FacultyStudentList>(context);
     _student = Provider.of<StudentData>(context);
 
     return WillPopScope(
@@ -312,7 +370,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
-              _type = index == 0 ? Type.all : Type.feedback;
               _indexBottomNavBar = index;
             });
           },
@@ -326,21 +383,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 child: CircularProgressIndicator(),
               )
             : RefreshIndicator(
-                onRefresh: () async {
-                  await Future.wait(
-                    [
-                      _adminStudent.fetch(
-                        studentid: _student.data.studentid,
-                      ),
-                      _facultyStudent.fetch(
-                        from: User.student,
-                        id: _student.data.studentid,
-                      ),
-                    ],
-                  );
-                },
+                onRefresh: () => _fetch(),
                 child: _indexBottomNavBar == 0
-                    ? StudentDashboardAdmin(_type)
+                    ? StudentDashboardAdmin(_type[_indexBottomNavBar])
                     : StudentDashboardFaculty(),
               ),
       ),
