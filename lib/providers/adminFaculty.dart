@@ -4,7 +4,6 @@ class AdminFaculty {
   final int id;
   final String facultyname;
   final String facultyemail;
-  final String course;
   final String type;
   final String subject;
   final String body;
@@ -18,7 +17,6 @@ class AdminFaculty {
     @required this.id,
     @required this.facultyname,
     @required this.facultyemail,
-    @required this.course,
     @required this.type,
     @required this.subject,
     @required this.body,
@@ -49,7 +47,6 @@ class AdminFacultyList with ChangeNotifier {
     from admin_faculty
     left join faculty_admin using (id)
     join faculty using (facultyid)
-    join course using (courseid)
     ''')
           : await connection.mappedResultsQuery(
               '''
@@ -57,7 +54,6 @@ class AdminFacultyList with ChangeNotifier {
     from admin_faculty
     left join faculty_admin using (id)
     join faculty using (facultyid)
-    join course using (courseid)
     where facultyid = @facultyid
     ''',
               substitutionValues: {
@@ -71,7 +67,6 @@ class AdminFacultyList with ChangeNotifier {
             id: val['admin_faculty']['id'],
             facultyname: val['faculty']['name'],
             facultyemail: val['faculty']['email'],
-            course: val['course']['coursename'],
             type: val['admin_faculty']['type'],
             subject: val['admin_faculty']['subject'],
             body: val['admin_faculty']['body'],
@@ -112,7 +107,6 @@ class AdminFacultyList with ChangeNotifier {
           id: _items[index].id,
           facultyname: _items[index].facultyname,
           facultyemail: _items[index].facultyemail,
-          course: _items[index].course,
           type: _items[index].type,
           subject: _items[index].subject,
           body: _items[index].body,
@@ -146,7 +140,6 @@ class AdminFacultyList with ChangeNotifier {
     ) select *
     from inserted
     join faculty using (facultyid)
-    join course using (courseid)
     ''',
         substitutionValues: {
           'facultyid': facultyid,
@@ -160,7 +153,6 @@ class AdminFacultyList with ChangeNotifier {
           id: response[0]['admin_faculty']['id'],
           facultyname: response[0]['faculty']['name'],
           facultyemail: response[0]['faculty']['email'],
-          course: response[0]['course']['coursename'],
           type: response[0]['admin_faculty']['type'],
           subject: response[0]['admin_faculty']['subject'],
           body: response[0]['admin_faculty']['body'],

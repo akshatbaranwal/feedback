@@ -1,4 +1,4 @@
-import '../import.dart';
+import '../../import.dart';
 
 class ConfirmDelete extends StatelessWidget {
   final Function del;

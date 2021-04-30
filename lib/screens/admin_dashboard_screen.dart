@@ -17,106 +17,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text('Filter'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.all)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.all;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'All',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.opinion)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.opinion;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'Opinion',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.request)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.request;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'Request',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.query)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.query;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'Query',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-            ],
-          ),
+        return Filter(
+          type: _type[_indexBottomNavBar],
+          callback: (type) => () {
+            setState(() {
+              _type[_indexBottomNavBar] = type;
+            });
+            Navigator.of(ctx).pop();
+          },
         );
       },
     );
@@ -147,9 +55,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
               TextButton(
                 onPressed: () {
-                  _admin.logout();
-                  Navigator.of(ctx)
-                      .popUntil(ModalRoute.withName(LoginScreen.routeName));
+                  logOut(ctx);
                 },
                 child: Text(
                   'Log out',
@@ -200,7 +106,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         });
       });
       _timer = Timer.periodic(
-        Duration(seconds: 5),
+        Duration(seconds: 10),
         (_) => _fetch(),
       );
       _isInit = false;
@@ -228,7 +134,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text('Hey Admin!'),
+          title: Text('Admin'),
           actions: [
             if (_indexBottomNavBar == 0)
               IconButton(
@@ -284,10 +190,29 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 child: CircularProgressIndicator(),
               )
             : RefreshIndicator(
-                onRefresh: () => _fetch(),
+                onRefresh: () async {
+                  await _fetch();
+                  if (_type[0] != Type.rating)
+                    setState(() {
+                      _type[0] = Type.all;
+                    });
+                  setState(() {
+                    _type[1] = Type.all;
+                  });
+                },
                 child: _indexBottomNavBar == 0
-                    ? AdminDashboardFaculty(_type[_indexBottomNavBar])
-                    : AdminDashboardStudent(_type[_indexBottomNavBar]),
+                    ? _type[_indexBottomNavBar] == Type.rating
+                        ? GraphList()
+                        : DiscussionList(
+                            type: _type[_indexBottomNavBar],
+                            from: User.admin,
+                            to: User.faculty,
+                          )
+                    : DiscussionList(
+                        type: _type[_indexBottomNavBar],
+                        from: User.admin,
+                        to: User.student,
+                      ),
               ),
       ),
     );

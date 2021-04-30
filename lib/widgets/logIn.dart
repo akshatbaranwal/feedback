@@ -1,11 +1,11 @@
-import '../../import.dart';
+import '../import.dart';
 
-class AdminForm extends StatefulWidget {
+class Login extends StatefulWidget {
   @override
-  _AdminFormState createState() => _AdminFormState();
+  _LoginState createState() => _LoginState();
 }
 
-class _AdminFormState extends State<AdminForm> {
+class _LoginState extends State<Login> {
   final _form = GlobalKey<FormState>();
   bool _hidePassword = true;
   String _email, _password;
@@ -17,22 +17,66 @@ class _AdminFormState extends State<AdminForm> {
     final isValid = _form.currentState.validate();
     if (!isValid) return;
     _form.currentState.save();
-    try {
-      await admin.register(
-        email: _email,
-        password: _password,
-      );
-      if (admin.data == null) {
+    if (student.emailList.contains(_email)) {
+      try {
+        await student.login(
+          email: _email,
+          password: _password,
+        );
+        if (student.data == null) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Incorrect Password'),
+          ));
+        } else {
+          Navigator.of(context).pushNamed(StudentDashboard.routeName);
+        }
+      } catch (error) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Something went wrong'),
+          content: Text('Connection Error'),
         ));
-      } else {
-        Navigator.of(context).pushNamed(AdminDashboard.routeName);
       }
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Connection Error'),
-      ));
+    } else if (faculty.emailList.contains(_email)) {
+      try {
+        await faculty.login(
+          email: _email,
+          password: _password,
+        );
+        if (faculty.data == null) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Incorrect Password'),
+          ));
+        } else {
+          Navigator.of(context).pushNamed(FacultyDashboard.routeName);
+        }
+      } catch (error) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Connection Error'),
+        ));
+      }
+    } else {
+      try {
+        await admin.login(
+          email: _email,
+          password: _password,
+        );
+        if (admin.data == null) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Incorrect Password'),
+          ));
+        } else {
+          Navigator.of(context).pushNamed(AdminDashboard.routeName);
+        }
+      } catch (error) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Connection Error'),
+        ));
+      }
     }
   }
 
@@ -51,6 +95,7 @@ class _AdminFormState extends State<AdminForm> {
               height: 20,
             ),
             TextFormField(
+              initialValue: '',
               decoration: InputDecoration(
                 labelText: 'Email',
                 hintText: 'Enter college ID',
@@ -62,12 +107,10 @@ class _AdminFormState extends State<AdminForm> {
                 if (email.isEmpty) return 'Enter the email';
                 if (!email.endsWith('@iiita.ac.in'))
                   return 'Domain must be @iiita.ac.in';
-                if (admin.emailList.contains(email))
-                  return 'Email already registered';
-                if (faculty.emailList.contains(email))
-                  return 'Email registered as faculty';
-                if (student.emailList.contains(email))
-                  return 'Email registered as student';
+                if (!student.emailList.contains(email) &&
+                    !faculty.emailList.contains(email) &&
+                    !admin.emailList.contains(email))
+                  return 'Email not registered';
                 return null;
               },
               onSaved: (email) {
@@ -78,6 +121,7 @@ class _AdminFormState extends State<AdminForm> {
               height: 20,
             ),
             TextFormField(
+              initialValue: '',
               obscureText: _hidePassword,
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -103,9 +147,6 @@ class _AdminFormState extends State<AdminForm> {
               onSaved: (password) {
                 _password = password;
               },
-              onFieldSubmitted: (_) {
-                _safeForm();
-              },
             ),
             SizedBox(
               height: 20,
@@ -114,7 +155,7 @@ class _AdminFormState extends State<AdminForm> {
               onPressed: () {
                 _safeForm();
               },
-              child: Text('Register'),
+              child: Text('Login'),
             ),
           ],
         ),

@@ -8,9 +8,8 @@ class FacultyDashboard extends StatefulWidget {
 
 class _FacultyDashboardState extends State<FacultyDashboard> {
   bool _isInit = true, _isLoading = false;
-  List<Type> _type = [Type.all, Type.feedback];
+  Type _type = Type.all;
   FacultyData _faculty;
-  List<FacultyRating> _rating;
   int _indexBottomNavBar = 0;
   Timer _timer;
 
@@ -78,106 +77,14 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
     return showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text('Filter'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.all)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.all;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'All',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.opinion)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.opinion;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'Opinion',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.request)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.request;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'Request',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.query)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.query;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'Query',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-            ],
-          ),
+        return Filter(
+          type: _type,
+          callback: (type) => () {
+            setState(() {
+              _type = type;
+            });
+            Navigator.of(ctx).pop();
+          },
         );
       },
     );
@@ -221,9 +128,7 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
               ),
               TextButton(
                 onPressed: () {
-                  _faculty.logout();
-                  Navigator.of(ctx)
-                      .popUntil(ModalRoute.withName(LoginScreen.routeName));
+                  logOut(ctx);
                 },
                 child: Text(
                   'Log out',
@@ -277,7 +182,7 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
         });
       });
       _timer = Timer.periodic(
-        Duration(seconds: 5),
+        Duration(seconds: 10),
         (_) => _fetch(),
       );
       _isInit = false;
@@ -293,7 +198,6 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    _rating = Provider.of<FacultyStudentList>(context).ratings;
     _faculty = Provider.of<FacultyData>(context);
 
     return WillPopScope(
@@ -314,7 +218,7 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
             : null,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text('Hey ${_faculty.data.name.split(' ')[0]}!'),
+          title: Text(_faculty.data.name),
           actions: [
             if (_indexBottomNavBar == 0)
               IconButton(
@@ -329,20 +233,10 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                   context: context,
                   builder: (ctx) => Dialog(
                     insetPadding: const EdgeInsets.all(10),
-                    child: _rating.length == 0
-                        ? Container(
-                            height: 100,
-                            child: Center(
-                              child: Text(
-                                'No ratings yet.',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          )
-                        : Graph(_rating[0]),
+                    child: Container(
+                      height: 400,
+                      child: GraphList(),
+                    ),
                   ),
                 );
               },
@@ -385,10 +279,22 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                 child: CircularProgressIndicator(),
               )
             : RefreshIndicator(
-                onRefresh: () => _fetch(),
+                onRefresh: () async {
+                  await _fetch();
+                  setState(() {
+                    _type = Type.all;
+                  });
+                },
                 child: _indexBottomNavBar == 0
-                    ? FacultyDashboardAdmin(_type[_indexBottomNavBar])
-                    : FacultyDashboardStudent(),
+                    ? DiscussionList(
+                        type: _type,
+                        from: User.faculty,
+                        to: User.admin,
+                      )
+                    : DiscussionList(
+                        from: User.faculty,
+                        to: User.student,
+                      ),
               ),
       ),
     );

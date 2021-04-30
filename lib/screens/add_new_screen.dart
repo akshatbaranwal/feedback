@@ -15,7 +15,7 @@ class _AddNewState extends State<AddNew> {
   FacultyData _faculty;
   User _from;
   Type _type;
-  int _facultyid;
+  int _facultyid, _courseid;
   double _lecture, _demo, _slide, _lab, _syllabus, _interaction;
   String _subject, _body;
 
@@ -31,12 +31,14 @@ class _AddNewState extends State<AddNew> {
           subject: _subject,
           body: _body,
         );
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('query added!'),
-          duration: Duration(seconds: 1),
+          duration: Duration(seconds: 2),
         ));
         Navigator.of(context).pop();
       } catch (error) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Connection Error'),
@@ -51,12 +53,14 @@ class _AddNewState extends State<AddNew> {
           subject: _subject,
           body: _body,
         );
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('${_type.toString().split('.').last} added!'),
-          duration: Duration(seconds: 1),
+          duration: Duration(seconds: 2),
         ));
         Navigator.of(context).pop();
       } catch (error) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Connection Error'),
@@ -71,12 +75,14 @@ class _AddNewState extends State<AddNew> {
           subject: _subject,
           body: _body,
         );
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('${_type.toString().split('.').last} added!'),
-          duration: Duration(seconds: 1),
+          duration: Duration(seconds: 2),
         ));
         Navigator.of(context).pop();
       } catch (error) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Connection Error'),
@@ -92,12 +98,18 @@ class _AddNewState extends State<AddNew> {
         children: [
           if (_type == Type.feedback) ...[
             DropdownButtonFormField(
-              items: _facultyStudent.ratings.map((e) {
-                return DropdownMenuItem(
-                  child: Text(e.name),
-                  value: e.facultyid,
-                );
-              }).toList(),
+              items: () {
+                var k = _facultyStudent.ratings
+                    .map((e) => '${e.facultyid}:${e.facultyname}')
+                    .toSet()
+                    .toList();
+                return k.map((e) {
+                  return DropdownMenuItem(
+                    child: Text(e.split(':')[1]),
+                    value: int.parse(e.split(':')[0]),
+                  );
+                }).toList();
+              }(),
               onChanged: (_) {},
               decoration: InputDecoration(
                 labelText: 'Faculty',
@@ -151,6 +163,9 @@ class _AddNewState extends State<AddNew> {
   }
 
   Future<void> _saveRating() async {
+    final isValid = _form.currentState.validate();
+    if (!isValid) return;
+    _form.currentState.save();
     try {
       await _facultyStudent.updateRating(
         facultyid: _facultyid,
@@ -161,13 +176,16 @@ class _AddNewState extends State<AddNew> {
         lab: _lab,
         syllabus: _syllabus,
         interaction: _interaction,
+        courseid: _courseid,
       );
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Rating updated!'),
-        duration: Duration(seconds: 1),
+        duration: Duration(seconds: 2),
       ));
       Navigator.of(context).pop();
     } catch (error) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Connection Error'),
@@ -188,119 +206,137 @@ class _AddNewState extends State<AddNew> {
   }
 
   Widget _ratingBuilder() {
-    return ListView(
-      children: [
-        DropdownButtonFormField(
-          items: _facultyStudent.ratings.map((e) {
-            return DropdownMenuItem(
-              child: Text(e.name),
-              value: e.facultyid,
-            );
-          }).toList(),
-          onChanged: (facultyid) {
-            setState(() {
-              _facultyid = facultyid;
-              int _index = _facultyStudent.ratings
-                  .indexWhere((element) => element.facultyid == facultyid);
-              _lecture = _facultyStudent.ratings[_index].lecture ?? 50;
-              _demo = _facultyStudent.ratings[_index].demo ?? 50;
-              _slide = _facultyStudent.ratings[_index].slide ?? 50;
-              _lab = _facultyStudent.ratings[_index].lab ?? 50;
-              _syllabus = _facultyStudent.ratings[_index].syllabus ?? 50;
-              _interaction = _facultyStudent.ratings[_index].interaction ?? 50;
-            });
-          },
-          decoration: InputDecoration(
-            labelText: 'Faculty',
+    return Form(
+      key: _form,
+      child: ListView(
+        children: [
+          DropdownButtonFormField(
+            isExpanded: true,
+            isDense: false,
+            items: _facultyStudent.ratings.map((e) {
+              return DropdownMenuItem(
+                child: Center(
+                  child: Column(
+                    children: [
+                      Text(e.facultyname),
+                      Text(
+                        e.coursename,
+                        style: TextStyle(
+                          color: Colors.black38,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                value: '${e.facultyid}:${e.courseid}',
+              );
+            }).toList(),
+            onChanged: (id) {
+              setState(() {
+                _facultyid = int.parse(id.split(':')[0]);
+                _courseid = int.parse(id.split(':')[1]);
+                int _index = _facultyStudent.ratings.indexWhere((element) =>
+                    element.facultyid == _facultyid &&
+                    element.courseid == _courseid);
+                _lecture = _facultyStudent.ratings[_index].lecture ?? 50;
+                _demo = _facultyStudent.ratings[_index].demo ?? 50;
+                _slide = _facultyStudent.ratings[_index].slide ?? 50;
+                _lab = _facultyStudent.ratings[_index].lab ?? 50;
+                _syllabus = _facultyStudent.ratings[_index].syllabus ?? 50;
+                _interaction =
+                    _facultyStudent.ratings[_index].interaction ?? 50;
+              });
+            },
+            decoration: InputDecoration(
+              labelText: 'Faculty',
+            ),
+            validator: (id) {
+              if (id == null) return 'Which faculty?';
+              return null;
+            },
           ),
-          validator: (facultyid) {
-            if (facultyid == null) return 'Which faculty?';
-            return null;
-          },
-          onSaved: (facultyid) {
-            _facultyid = facultyid;
-          },
-        ),
-        SizedBox(
-          height: 20,
-        ),
-        if (_facultyid != null)
-          Column(
-            children: [
-              Text(
-                'Lecture: $_lecture',
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-              _slider(_lecture, (value) {
-                setState(() {
-                  _lecture = value;
-                });
-              }),
-              Text(
-                'Demo $_demo',
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-              _slider(_demo, (value) {
-                setState(() {
-                  _demo = value;
-                });
-              }),
-              Text(
-                'Slides: $_slide',
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-              _slider(_slide, (value) {
-                setState(() {
-                  _slide = value;
-                });
-              }),
-              Text(
-                'Lab: $_lab',
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-              _slider(_lab, (value) {
-                setState(() {
-                  _lab = value;
-                });
-              }),
-              Text(
-                'Syllabus: $_syllabus',
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-              _slider(_syllabus, (value) {
-                setState(() {
-                  _syllabus = value;
-                });
-              }),
-              Text(
-                'Interaction: $_interaction',
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-              _slider(_interaction, (value) {
-                setState(() {
-                  _interaction = value;
-                });
-              }),
-              ElevatedButton.icon(
-                onPressed: _saveRating,
-                icon: Icon(Icons.done),
-                label: Text('Update'),
-              ),
-            ],
+          SizedBox(
+            height: 20,
           ),
-      ],
+          if (_facultyid != null)
+            Column(
+              children: [
+                Text(
+                  'Lecture: $_lecture',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                _slider(_lecture, (value) {
+                  setState(() {
+                    _lecture = value;
+                  });
+                }),
+                Text(
+                  'Demo $_demo',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                _slider(_demo, (value) {
+                  setState(() {
+                    _demo = value;
+                  });
+                }),
+                Text(
+                  'Slides: $_slide',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                _slider(_slide, (value) {
+                  setState(() {
+                    _slide = value;
+                  });
+                }),
+                Text(
+                  'Lab: $_lab',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                _slider(_lab, (value) {
+                  setState(() {
+                    _lab = value;
+                  });
+                }),
+                Text(
+                  'Syllabus: $_syllabus',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                _slider(_syllabus, (value) {
+                  setState(() {
+                    _syllabus = value;
+                  });
+                }),
+                Text(
+                  'Interaction: $_interaction',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                _slider(_interaction, (value) {
+                  setState(() {
+                    _interaction = value;
+                  });
+                }),
+                ElevatedButton.icon(
+                  onPressed: _saveRating,
+                  icon: Icon(Icons.done),
+                  label: Text('Update'),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 

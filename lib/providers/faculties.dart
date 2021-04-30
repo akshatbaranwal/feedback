@@ -4,7 +4,7 @@ class Faculty {
   final int facultyid;
   final String email;
   final String name;
-  final int courseid;
+  final List<int> courseid;
 
   Faculty({
     @required this.facultyid,
@@ -63,7 +63,8 @@ class FacultyData with ChangeNotifier {
   Future<void> fetchEmails() async {
     try {
       final response = await connection.query('''
-      select email from faculty
+      select email 
+      from faculty
       ''');
       final loadedEmails = [];
       if (response.isNotEmpty) {
@@ -87,6 +88,7 @@ class FacultyData with ChangeNotifier {
         '''
     select facultyid, email, name, courseid
     from faculty
+    join faculty_course using (facultyid)
     where email = @email
     and password = crypt(@password, password)
     ''',
@@ -97,11 +99,15 @@ class FacultyData with ChangeNotifier {
       );
       Faculty temp;
       if (response.isNotEmpty) {
+        List<int> courseid = [];
+        response.forEach((val) {
+          courseid.add(val[3]);
+        });
         temp = Faculty(
           facultyid: response[0][0],
           email: response[0][1],
           name: response[0][2],
-          courseid: response[0][3],
+          courseid: courseid,
         );
       }
       _data = temp;
@@ -120,24 +126,35 @@ class FacultyData with ChangeNotifier {
     try {
       final response = await connection.query(
         '''
-    insert into faculty (email, password, name, courseid)
-    values (@email, crypt(@password, gen_salt('bf')), @name, @courseid)
+    insert into faculty (email, password, name)
+    values (@email, crypt(@password, gen_salt('bf')), @name)
     returning *
     ''',
         substitutionValues: {
           'email': email,
           'password': password,
           'name': name,
-          'courseid': courseid,
         },
       );
       Faculty temp;
       if (response.isNotEmpty) {
+        await courseid.forEach((val) {
+          connection.query(
+            '''
+      insert into faculty_course
+      values (@facultyid, @courseid)
+      ''',
+            substitutionValues: {
+              'facultyid': response[0][0],
+              'courseid': val,
+            },
+          );
+        });
         temp = Faculty(
           facultyid: response[0][0],
-          email: response[0][1],
-          name: response[0][3],
-          courseid: response[0][4],
+          email: email,
+          name: name,
+          courseid: courseid,
         );
         _emailList.add(temp.email);
       }
@@ -150,29 +167,70 @@ class FacultyData with ChangeNotifier {
 
   Future<void> updateDetails({
     @required name,
-    @required courseid,
+    @required List<int> courseid,
   }) async {
     try {
       final response = await connection.query(
         '''
     update faculty
-    set name = @name,
-        courseid = @courseid
+    set name = @name
     where facultyid = @facultyid
     returning *
     ''',
         substitutionValues: {
           'name': name,
           'facultyid': _data.facultyid,
-          'courseid': courseid,
         },
       );
       if (response.isNotEmpty) {
+        List<List<Object>> response2 = await connection.query(
+          '''
+        select courseid
+        from faculty_course
+        where facultyid = @facultyid
+        ''',
+          substitutionValues: {
+            'facultyid': _data.facultyid,
+          },
+        );
+
+        List<int> toDelete = [];
+        response2.forEach((element) {
+          if (!courseid.contains(element[0])) toDelete.add(element[0] as int);
+        });
+
+        toDelete.forEach((val) async {
+          await connection.query(
+            '''
+          delete from faculty_course
+          where facultyid = @facultyid and courseid = @courseid
+          ''',
+            substitutionValues: {
+              'facultyid': _data.facultyid,
+              'courseid': val,
+            },
+          );
+        });
+
+        courseid.forEach((val) async {
+          await connection.query(
+            '''
+          insert into faculty_course
+          values (@facultyid, @courseid)
+          on conflict (facultyid, courseid) do nothing
+          ''',
+            substitutionValues: {
+              'facultyid': _data.facultyid,
+              'courseid': val,
+            },
+          );
+        });
+
         _data = Faculty(
           facultyid: _data.facultyid,
           email: _data.email,
-          name: response[0][3],
-          courseid: response[0][4],
+          name: name,
+          courseid: courseid,
         );
         notifyListeners();
       }

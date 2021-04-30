@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import '../import.dart';
+import '../../import.dart';
 
 class DiscussionDialog extends StatefulWidget {
   final item;

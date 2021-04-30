@@ -8,7 +8,7 @@ class StudentDashboard extends StatefulWidget {
 
 class _StudentDashboardState extends State<StudentDashboard> {
   bool _isInit = true, _isLoading = false;
-  List<Type> _type = [Type.all, Type.feedback];
+  Type _type = Type.all;
   StudentData _student;
   int _indexBottomNavBar = 0;
   Timer _timer;
@@ -110,106 +110,14 @@ class _StudentDashboardState extends State<StudentDashboard> {
     return showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text('Filter'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.all)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.all;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'All',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.opinion)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.opinion;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'Opinion',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.request)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.request;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'Request',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith((_) {
-                    if (_type[_indexBottomNavBar] == Type.query)
-                      return Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.1);
-                    else
-                      return null;
-                  }),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _type[_indexBottomNavBar] = Type.query;
-                  });
-                  Navigator.of(ctx).pop();
-                },
-                child: Text(
-                  'Query',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-            ],
-          ),
+        return Filter(
+          type: _type,
+          callback: (type) => () {
+            setState(() {
+              _type = type;
+            });
+            Navigator.of(ctx).pop();
+          },
         );
       },
     );
@@ -253,9 +161,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               ),
               TextButton(
                 onPressed: () {
-                  _student.logout();
-                  Navigator.of(ctx)
-                      .popUntil(ModalRoute.withName(LoginScreen.routeName));
+                  logOut(ctx);
                 },
                 child: Text(
                   'Log out',
@@ -309,7 +215,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         });
       });
       _timer = Timer.periodic(
-        Duration(seconds: 5),
+        Duration(seconds: 10),
         (_) => _fetch(),
       );
       _isInit = false;
@@ -383,10 +289,22 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 child: CircularProgressIndicator(),
               )
             : RefreshIndicator(
-                onRefresh: () => _fetch(),
+                onRefresh: () async {
+                  await _fetch();
+                  setState(() {
+                    _type = Type.all;
+                  });
+                },
                 child: _indexBottomNavBar == 0
-                    ? StudentDashboardAdmin(_type[_indexBottomNavBar])
-                    : StudentDashboardFaculty(),
+                    ? DiscussionList(
+                        type: _type,
+                        from: User.student,
+                        to: User.admin,
+                      )
+                    : DiscussionList(
+                        from: User.student,
+                        to: User.faculty,
+                      ),
               ),
       ),
     );

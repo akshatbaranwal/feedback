@@ -1,15 +1,15 @@
 import '../../import.dart';
 
-class FacultyForm extends StatefulWidget {
+class StudentForm extends StatefulWidget {
   @override
-  _FacultyFormState createState() => _FacultyFormState();
+  _StudentFormState createState() => _StudentFormState();
 }
 
-class _FacultyFormState extends State<FacultyForm> {
+class _StudentFormState extends State<StudentForm> {
   final _form = GlobalKey<FormState>();
   bool _hidePassword = true;
-  String _email, _password, _name;
-  int _courseid;
+  String _email, _password, _name, _enroll;
+  int _year, _branchid;
   StudentData _student;
   FacultyData _faculty;
   AdminData _admin;
@@ -21,32 +21,42 @@ class _FacultyFormState extends State<FacultyForm> {
     _form.currentState.save();
     try {
       if (_isNew)
-        await _faculty.register(
+        await _student.register(
+          branchid: _branchid,
+          enroll: _enroll,
+          year: _year,
           name: _name,
-          courseid: _courseid,
           email: _email,
           password: _password,
         );
       else
-        await _faculty.updateDetails(
+        await _student.updateDetails(
+          enroll: _enroll,
           name: _name,
-          courseid: _courseid,
+          branchid: _branchid,
+          year: _year,
         );
-      if (_faculty.data == null) {
+      if (_student.data == null) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Something went wrong'),
         ));
       } else {
-        if (!_isNew)
+        if (!_isNew) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Update successful!'),
           ));
-        Navigator.of(context).pushNamed(FacultyDashboard.routeName);
+        }
+        Navigator.of(context).pushNamed(StudentDashboard.routeName);
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Connection Error'),
-      ));
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Connection Error'),
+        ),
+      );
     }
   }
 
@@ -55,7 +65,7 @@ class _FacultyFormState extends State<FacultyForm> {
     _student = Provider.of<StudentData>(context);
     _faculty = Provider.of<FacultyData>(context);
     _admin = Provider.of<AdminData>(context);
-    _isNew = _faculty.data == null;
+    _isNew = _student.data == null;
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -64,10 +74,10 @@ class _FacultyFormState extends State<FacultyForm> {
         child: ListView(
           children: [
             SizedBox(
-              height: 20,
+              height: 15,
             ),
             TextFormField(
-              initialValue: _isNew ? '' : _faculty.data.name,
+              initialValue: _isNew ? '' : _student.data.name,
               decoration: InputDecoration(
                 labelText: 'Name',
                 hintText: 'Enter your full name',
@@ -99,12 +109,12 @@ class _FacultyFormState extends State<FacultyForm> {
                   if (email.isEmpty) return 'Enter the email';
                   if (!email.endsWith('@iiita.ac.in'))
                     return 'Domain must be @iiita.ac.in';
-                  if (_faculty.emailList.contains(email))
-                    return 'Email already registered';
                   if (_student.emailList.contains(email))
-                    return 'Email registered as student';
+                    return 'Email already registered';
                   if (_admin.emailList.contains(email))
                     return 'Email registered as admin';
+                  if (_faculty.emailList.contains(email))
+                    return 'Email registered as faculty';
                   return null;
                 },
                 onSaved: (email) {
@@ -145,13 +155,56 @@ class _FacultyFormState extends State<FacultyForm> {
             SizedBox(
               height: 15,
             ),
+            TextFormField(
+              initialValue: _isNew ? '' : _student.data.enroll,
+              decoration: InputDecoration(
+                labelText: 'Enrollment No.',
+                hintText: 'Enrollment No.',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.account_balance),
+              ),
+              textInputAction: TextInputAction.next,
+              validator: (enroll) {
+                if (enroll.isEmpty) return 'Enter the enrollment number';
+                return null;
+              },
+              onSaved: (enroll) {
+                _enroll = enroll;
+              },
+            ),
+            SizedBox(
+              height: 15,
+            ),
+            TextFormField(
+              initialValue: _isNew ? '' : _student.data.year.toString(),
+              decoration: InputDecoration(
+                labelText: 'Start Year',
+                hintText: 'Enter the year you joined college',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.timelapse),
+              ),
+              textInputAction: TextInputAction.next,
+              validator: (year) {
+                if (year.isEmpty) return 'Enter the year';
+                if (int.tryParse(year) == null) return 'Must be a number';
+                if (int.parse(year) > DateTime.now().year)
+                  return 'Are you time travelling?';
+                if (int.parse(year) == DateTime.now().year &&
+                    DateTime.now().month <= 6) {
+                  return _isNew ? 'Semester 1 yet to start' : 'Invalid year';
+                }
+                return null;
+              },
+              onSaved: (year) {
+                _year = int.parse(year);
+              },
+            ),
+            SizedBox(
+              height: 15,
+            ),
             DropdownButtonFormField(
-              value: _isNew ? null : _faculty.data.courseid,
-              isExpanded: true,
-              isDense: false,
-              itemHeight: 50,
-              menuMaxHeight: 500,
-              items: _faculty.courseList
+              value: _isNew ? null : _student.data.branchid,
+              items: _student.branchList
                   .map((e) => DropdownMenuItem(
                         child: Text(e[1]),
                         value: e[0],
@@ -159,17 +212,17 @@ class _FacultyFormState extends State<FacultyForm> {
                   .toList(),
               onChanged: (_) {},
               decoration: InputDecoration(
-                labelText: 'Course',
-                hintText: 'Choose your course',
+                labelText: 'Branch',
+                hintText: 'Choose your branch',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.school),
               ),
-              validator: (courseid) {
-                if (courseid == null) return 'Enter the course';
+              validator: (branchid) {
+                if (branchid == null) return 'Enter the branch';
                 return null;
               },
-              onSaved: (courseid) {
-                _courseid = courseid;
+              onSaved: (branchid) {
+                _branchid = branchid;
               },
             ),
             SizedBox(

@@ -5,7 +5,6 @@ import '../import.dart';
 class FacultyStudent {
   final int id;
   final int sem;
-  final String course;
   final String studentemail;
   final String facultyemail;
   final String studentname;
@@ -21,7 +20,6 @@ class FacultyStudent {
   FacultyStudent({
     @required this.id,
     @required this.sem,
-    @required this.course,
     @required this.studentemail,
     @required this.facultyemail,
     @required this.studentname,
@@ -37,9 +35,10 @@ class FacultyStudent {
 }
 
 class FacultyRating {
-  final String name;
-  final String course;
   final int facultyid;
+  final String facultyname;
+  final int courseid;
+  final String coursename;
   final double lecture;
   final double demo;
   final double slide;
@@ -48,9 +47,10 @@ class FacultyRating {
   final double interaction;
 
   FacultyRating({
-    @required this.name,
-    @required this.course,
     @required this.facultyid,
+    @required this.facultyname,
+    @required this.courseid,
+    @required this.coursename,
     @required this.lecture,
     @required this.demo,
     @required this.slide,
@@ -89,7 +89,6 @@ class FacultyStudentList with ChangeNotifier {
     left join student_faculty using (id)
     join student using (studentid)
     join faculty using (facultyid)
-    join course using (courseid)
     join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
     where faculty_student.studentid = @studentid
     ''', substitutionValues: {
@@ -101,7 +100,6 @@ class FacultyStudentList with ChangeNotifier {
     left join student_faculty using (id)
     join student using (studentid)
     join faculty using (facultyid)
-    join course using (courseid)
     join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
     where faculty_student.facultyid = @facultyid
     ''', substitutionValues: {
@@ -114,7 +112,6 @@ class FacultyStudentList with ChangeNotifier {
               id: val['faculty_student']['id'],
               sem: val['branch_sem']['sem'],
               studentemail: val['student']['email'],
-              course: val['course']['coursename'],
               facultyemail: val['faculty']['email'],
               studentname: val['student']['name'],
               facultyname: val['faculty']['name'],
@@ -138,13 +135,14 @@ class FacultyStudentList with ChangeNotifier {
         try {
           var response = await connection.mappedResultsQuery(
             '''
-    select faculty.name, faculty.facultyid, course.coursename, faculty_rating.*
+    select faculty.name, faculty.facultyid, course.courseid, course.coursename, faculty_rating.lecture, faculty_rating.demo, faculty_rating.slide, faculty_rating.lab, faculty_rating.syllabus, faculty_rating.interaction
     from student
     join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
     join branch_course using (branchsemid)
     join course using (courseid)
-    join faculty using (courseid)
-    left join faculty_rating on faculty_rating.studentid = student.studentid and faculty_rating.facultyid = faculty.facultyid
+    join faculty_course using (courseid)
+    join faculty using (facultyid)
+    left join faculty_rating on faculty_rating.studentid = student.studentid and faculty_rating.facultyid = faculty.facultyid and faculty_rating.courseid = course.courseid
     where student.studentid = @studentid
     ''',
             substitutionValues: {
@@ -155,9 +153,10 @@ class FacultyStudentList with ChangeNotifier {
           if (response.isNotEmpty) {
             response.forEach((val) {
               loadedData.add(FacultyRating(
-                name: val['faculty']['name'],
-                course: val['course']['coursename'],
                 facultyid: val['faculty']['facultyid'],
+                facultyname: val['faculty']['name'],
+                courseid: val['course']['courseid'],
+                coursename: val['course']['coursename'],
                 lecture: val['faculty_rating']['lecture'],
                 demo: val['faculty_rating']['demo'],
                 slide: val['faculty_rating']['slide'],
@@ -178,22 +177,23 @@ class FacultyStudentList with ChangeNotifier {
         try {
           var response = await connection.mappedResultsQuery(
             '''
-    select faculty.name, course.coursename, faculty_rating.*
+    select faculty.name, course.courseid, course.coursename, faculty_rating.lecture, faculty_rating.demo, faculty_rating.slide, faculty_rating.lab, faculty_rating.syllabus, faculty_rating.interaction
     from faculty_rating
-    join faculty using(facultyid)
-    join course using(courseid)
-    where faculty.facultyid = @facultyid
+    join faculty using (facultyid)
+    join course using (courseid)
+    where faculty_rating.facultyid = @facultyid
     ''',
             substitutionValues: {
               'facultyid': id,
             },
           );
-          int len = response.length;
-          if (len != 0) {
-            var result = FacultyRating(
-              name: '',
-              course: '',
+          final List<FacultyRating> loadedData = [];
+          if (response.isNotEmpty) {
+            var initialValue = FacultyRating(
               facultyid: 0,
+              facultyname: '',
+              courseid: 0,
+              coursename: '',
               lecture: 0,
               demo: 0,
               slide: 0,
@@ -201,28 +201,35 @@ class FacultyStudentList with ChangeNotifier {
               syllabus: 0,
               interaction: 0,
             );
-            result = response.fold(
-              result,
-              (previousValue, element) => FacultyRating(
-                name: element['faculty']['name'],
-                course: element['course']['coursename'],
-                facultyid: element['faculty_rating']['facultyid'],
-                lecture: element['faculty_rating']['lecture'] / len +
-                    previousValue.lecture,
-                demo: element['faculty_rating']['demo'] / len +
-                    previousValue.demo,
-                slide: element['faculty_rating']['slide'] / len +
-                    previousValue.slide,
-                lab: element['faculty_rating']['lab'] / len + previousValue.lab,
-                syllabus: element['faculty_rating']['syllabus'] / len +
-                    previousValue.syllabus,
-                interaction: element['faculty_rating']['interaction'] / len +
-                    previousValue.interaction,
-              ),
-            );
-            _ratings = [result];
-          } else
-            _ratings = [];
+            int len;
+            var result = groupBy(response, (obj) => obj['course']['courseid']);
+            result.forEach((key, value) {
+              len = value.length;
+              FacultyRating temp = value.fold(
+                  initialValue,
+                  (previousValue, element) => FacultyRating(
+                        facultyid: id,
+                        facultyname: element['faculty']['name'],
+                        courseid: element['course']['courseid'],
+                        coursename: element['course']['coursename'],
+                        lecture: element['faculty_rating']['lecture'] / len +
+                            previousValue.lecture,
+                        demo: element['faculty_rating']['demo'] / len +
+                            previousValue.demo,
+                        slide: element['faculty_rating']['slide'] / len +
+                            previousValue.slide,
+                        lab: element['faculty_rating']['lab'] / len +
+                            previousValue.lab,
+                        syllabus: element['faculty_rating']['syllabus'] / len +
+                            previousValue.syllabus,
+                        interaction:
+                            element['faculty_rating']['interaction'] / len +
+                                previousValue.interaction,
+                      ));
+              loadedData.add(temp);
+            });
+          }
+          _ratings = loadedData;
           notifyListeners();
         } catch (error) {
           throw error;
@@ -232,35 +239,39 @@ class FacultyStudentList with ChangeNotifier {
       case User.admin:
         try {
           var response = await connection.mappedResultsQuery('''
-    select faculty.name, course.coursename, faculty_rating.*
+    select faculty.facultyid, faculty.name, course.courseid, course.coursename, faculty_rating.lecture, faculty_rating.demo, faculty_rating.slide, faculty_rating.lab, faculty_rating.syllabus, faculty_rating.interaction
     from faculty_rating
-    join faculty using(facultyid)
-    join course using(courseid)
+    join faculty using (facultyid)
+    join course using (courseid)
     ''');
           final List<FacultyRating> loadedData = [];
           if (response.isNotEmpty) {
-            var initialValue = FacultyRating(
-              name: '',
-              course: '',
-              facultyid: 0,
-              lecture: 0,
-              demo: 0,
-              slide: 0,
-              lab: 0,
-              syllabus: 0,
-              interaction: 0,
-            );
             int len;
-            var result =
-                groupBy(response, (obj) => obj['faculty_rating']['facultyid']);
+            var result = groupBy(
+                response,
+                (obj) =>
+                    "${obj['faculty']['facultyid']}:${obj['course']['courseid']}");
             result.forEach((key, value) {
+              var initialValue = FacultyRating(
+                facultyid: 0,
+                facultyname: '',
+                courseid: 0,
+                coursename: '',
+                lecture: 0,
+                demo: 0,
+                slide: 0,
+                lab: 0,
+                syllabus: 0,
+                interaction: 0,
+              );
               len = value.length;
               FacultyRating temp = value.fold(
                   initialValue,
                   (previousValue, element) => FacultyRating(
-                        name: element['faculty']['name'],
-                        course: element['course']['coursename'],
-                        facultyid: element['faculty_rating']['facultyid'],
+                        facultyid: element['faculty']['facultyid'],
+                        facultyname: element['faculty']['name'],
+                        courseid: element['course']['courseid'],
+                        coursename: element['course']['coursename'],
                         lecture: element['faculty_rating']['lecture'] / len +
                             previousValue.lecture,
                         demo: element['faculty_rating']['demo'] / len +
@@ -310,7 +321,6 @@ class FacultyStudentList with ChangeNotifier {
           sem: _items[index].sem,
           studentname: _items[index].studentname,
           facultyname: _items[index].facultyname,
-          course: _items[index].course,
           studentemail: _items[index].studentemail,
           facultyemail: _items[index].facultyemail,
           subject: _items[index].subject,
@@ -339,34 +349,37 @@ class FacultyStudentList with ChangeNotifier {
     @required lab,
     @required syllabus,
     @required interaction,
+    @required courseid,
   }) async {
     try {
       final response = await connection.mappedResultsQuery(
         '''
       insert into faculty_rating
-      values (@facultyid, @studentid, @lecture, @demo, @slide, @lab, @syllabus, @interaction)
-      on conflict (facultyid, studentid) do UPDATE
-      set facultyid = @facultyid, studentid = @studentid, lecture = @lecture, demo = @demo, slide = @slide, lab = @lab, syllabus = @syllabus, interaction = @interaction
+      values (@facultyid, @studentid, @lecture, @demo, @slide, @lab, @syllabus, @interaction, @courseid)
+      on conflict (facultyid, studentid, courseid) do UPDATE
+      set facultyid = @facultyid, studentid = @studentid, lecture = @lecture, demo = @demo, slide = @slide, lab = @lab, syllabus = @syllabus, interaction = @interaction, courseid = @courseid
       returning *
       ''',
         substitutionValues: {
-          'studentid': studentid,
           'facultyid': facultyid,
+          'studentid': studentid,
           'lecture': lecture,
           'demo': demo,
           'slide': slide,
           'lab': lab,
           'syllabus': syllabus,
           'interaction': interaction,
+          'courseid': courseid,
         },
       );
       if (response.isNotEmpty) {
-        var _prevRatingIndex =
-            _ratings.indexWhere((element) => element.facultyid == facultyid);
-        _ratings[_prevRatingIndex] = FacultyRating(
-          name: _ratings[_prevRatingIndex].name,
-          course: _ratings[_prevRatingIndex].course,
+        var _prevRatingIndex = _ratings.indexWhere((element) =>
+            element.facultyid == facultyid && element.courseid == courseid);
+        var temp = FacultyRating(
           facultyid: facultyid,
+          facultyname: _ratings[_prevRatingIndex].facultyname,
+          courseid: courseid,
+          coursename: _ratings[_prevRatingIndex].coursename,
           lecture: lecture,
           demo: demo,
           slide: slide,
@@ -374,6 +387,10 @@ class FacultyStudentList with ChangeNotifier {
           syllabus: syllabus,
           interaction: interaction,
         );
+        if (_prevRatingIndex == -1)
+          _ratings.add(temp);
+        else
+          _ratings[_prevRatingIndex] = temp;
         notifyListeners();
       }
     } catch (error) {
@@ -398,7 +415,6 @@ class FacultyStudentList with ChangeNotifier {
     from inserted
     join student using (studentid)
     join faculty using (facultyid)
-    join course using (courseid)
     join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
     ''',
         substitutionValues: {
@@ -412,7 +428,6 @@ class FacultyStudentList with ChangeNotifier {
         _items.add(FacultyStudent(
           id: response[0]['faculty_student']['id'],
           sem: response[0]['branch_sem']['sem'],
-          course: response[0]['course']['coursename'],
           studentemail: response[0]['student']['email'],
           facultyemail: response[0]['faculty']['email'],
           studentname: response[0]['student']['name'],
