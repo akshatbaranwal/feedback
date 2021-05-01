@@ -23,13 +23,17 @@ class _UpdateAccountState extends State<UpdateAccount> {
       if (_user == User.student) await _student.updatePassword(_password[0]);
       if (_user == User.faculty) await _faculty.updatePassword(_password[0]);
       if (_user == User.admin) await _admin.updatePassword(_password[0]);
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Password updated'),
+        duration: Duration(seconds: 2),
       ));
       Navigator.of(context).pop();
     } catch (error) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Connection Error'),
+        duration: Duration(seconds: 2),
       ));
     }
   }

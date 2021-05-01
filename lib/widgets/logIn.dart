@@ -27,6 +27,7 @@ class _LoginState extends State<Login> {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Incorrect Password'),
+            duration: Duration(seconds: 2),
           ));
         } else {
           Navigator.of(context).pushNamed(StudentDashboard.routeName);
@@ -35,6 +36,7 @@ class _LoginState extends State<Login> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Connection Error'),
+          duration: Duration(seconds: 2),
         ));
       }
     } else if (faculty.emailList.contains(_email)) {
@@ -47,6 +49,7 @@ class _LoginState extends State<Login> {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Incorrect Password'),
+            duration: Duration(seconds: 2),
           ));
         } else {
           Navigator.of(context).pushNamed(FacultyDashboard.routeName);
@@ -55,6 +58,7 @@ class _LoginState extends State<Login> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Connection Error'),
+          duration: Duration(seconds: 2),
         ));
       }
     } else {
@@ -67,6 +71,7 @@ class _LoginState extends State<Login> {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Incorrect Password'),
+            duration: Duration(seconds: 2),
           ));
         } else {
           Navigator.of(context).pushNamed(AdminDashboard.routeName);
@@ -75,6 +80,7 @@ class _LoginState extends State<Login> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Connection Error'),
+          duration: Duration(seconds: 2),
         ));
       }
     }

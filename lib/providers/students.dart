@@ -48,6 +48,7 @@ class StudentData with ChangeNotifier {
   }
 
   Future<void> fetchBranches() async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.query('''
       select *
@@ -67,6 +68,7 @@ class StudentData with ChangeNotifier {
   }
 
   Future<void> fetchEmails() async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.query('''
       select email 
@@ -89,6 +91,7 @@ class StudentData with ChangeNotifier {
     @required email,
     @required password,
   }) async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.query(
         '''
@@ -128,6 +131,7 @@ class StudentData with ChangeNotifier {
     @required branchid,
     @required year,
   }) async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.query(
         '''
@@ -164,6 +168,7 @@ class StudentData with ChangeNotifier {
   }
 
   Future<void> delete() async {
+    if (connection.isClosed) await connection.open();
     try {
       await connection.query(
         '''
@@ -189,6 +194,7 @@ class StudentData with ChangeNotifier {
     @required branchid,
     @required year,
   }) async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.query(
         '''
@@ -225,6 +231,7 @@ class StudentData with ChangeNotifier {
   }
 
   Future<void> updatePassword(password) async {
+    if (connection.isClosed) await connection.open();
     try {
       await connection.query(
         '''

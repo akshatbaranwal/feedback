@@ -44,6 +44,7 @@ class AdminStudentList with ChangeNotifier {
   }
 
   Future<void> fetch({studentid}) async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = studentid == null
           ? await connection.mappedResultsQuery('''
@@ -99,6 +100,7 @@ class AdminStudentList with ChangeNotifier {
     @required reply,
     @required id,
   }) async {
+    if (connection.isClosed) await connection.open();
     final index = _items.indexWhere((element) => element.id == id);
     try {
       final response = await connection.mappedResultsQuery(
@@ -142,6 +144,7 @@ class AdminStudentList with ChangeNotifier {
     @required subject,
     @required body,
   }) async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.mappedResultsQuery(
         '''

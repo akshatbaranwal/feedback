@@ -31,6 +31,7 @@ class AdminData with ChangeNotifier {
   }
 
   Future<void> fetchEmails() async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.query('''
       select email from admin
@@ -52,6 +53,7 @@ class AdminData with ChangeNotifier {
     @required email,
     @required password,
   }) async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.query(
         '''
@@ -83,6 +85,7 @@ class AdminData with ChangeNotifier {
     @required email,
     @required password,
   }) async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.query(
         '''
@@ -111,6 +114,7 @@ class AdminData with ChangeNotifier {
   }
 
   Future<void> delete() async {
+    if (connection.isClosed) await connection.open();
     try {
       await connection.query(
         '''
@@ -131,6 +135,7 @@ class AdminData with ChangeNotifier {
   }
 
   Future<void> updatePassword(password) async {
+    if (connection.isClosed) await connection.open();
     try {
       await connection.query(
         '''

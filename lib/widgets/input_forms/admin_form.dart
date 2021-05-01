@@ -26,6 +26,7 @@ class _AdminFormState extends State<AdminForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Something went wrong'),
+          duration: Duration(seconds: 2),
         ));
       } else {
         Navigator.of(context).pushNamed(AdminDashboard.routeName);
@@ -34,6 +35,7 @@ class _AdminFormState extends State<AdminForm> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Connection Error'),
+        duration: Duration(seconds: 2),
       ));
     }
   }

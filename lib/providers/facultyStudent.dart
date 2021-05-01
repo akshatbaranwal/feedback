@@ -80,6 +80,7 @@ class FacultyStudentList with ChangeNotifier {
     @required User from,
     int id,
   }) async {
+    if (connection.isClosed) await connection.open();
     if (id != null)
       try {
         final response = from == User.student
@@ -302,6 +303,7 @@ class FacultyStudentList with ChangeNotifier {
     @required reply,
     @required id,
   }) async {
+    if (connection.isClosed) await connection.open();
     final index = _items.indexWhere((element) => element.id == id);
     try {
       final response = await connection.mappedResultsQuery(
@@ -351,6 +353,7 @@ class FacultyStudentList with ChangeNotifier {
     @required interaction,
     @required courseid,
   }) async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.mappedResultsQuery(
         '''
@@ -404,6 +407,7 @@ class FacultyStudentList with ChangeNotifier {
     @required subject,
     @required body,
   }) async {
+    if (connection.isClosed) await connection.open();
     try {
       final response = await connection.mappedResultsQuery(
         '''

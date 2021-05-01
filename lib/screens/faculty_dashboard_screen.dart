@@ -11,6 +11,10 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
   Type _type = Type.all;
   FacultyData _faculty;
   int _indexBottomNavBar = 0;
+  PageController _pageController = PageController(
+    initialPage: 0,
+    keepPage: true,
+  );
   Timer _timer;
 
   Future<void> _add() {
@@ -266,6 +270,9 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
+              _pageController.animateToPage(index,
+                  duration: Duration(milliseconds: 300),
+                  curve: Curves.slowMiddle);
               _indexBottomNavBar = index;
             });
           },
@@ -278,23 +285,40 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
             ? Center(
                 child: CircularProgressIndicator(),
               )
-            : RefreshIndicator(
-                onRefresh: () async {
-                  await _fetch();
+            : PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
                   setState(() {
-                    _type = Type.all;
+                    _indexBottomNavBar = index;
                   });
                 },
-                child: _indexBottomNavBar == 0
-                    ? DiscussionList(
-                        type: _type,
-                        from: User.faculty,
-                        to: User.admin,
-                      )
-                    : DiscussionList(
-                        from: User.faculty,
-                        to: User.student,
-                      ),
+                children: [
+                  RefreshIndicator(
+                    onRefresh: () async {
+                      await _fetch();
+                      setState(() {
+                        _type = Type.all;
+                      });
+                    },
+                    child: DiscussionList(
+                      type: _type,
+                      from: User.faculty,
+                      to: User.admin,
+                    ),
+                  ),
+                  RefreshIndicator(
+                    onRefresh: () async {
+                      await _fetch();
+                      setState(() {
+                        _type = Type.all;
+                      });
+                    },
+                    child: DiscussionList(
+                      from: User.faculty,
+                      to: User.student,
+                    ),
+                  ),
+                ],
               ),
       ),
     );

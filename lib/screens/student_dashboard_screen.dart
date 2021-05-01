@@ -11,6 +11,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Type _type = Type.all;
   StudentData _student;
   int _indexBottomNavBar = 0;
+  PageController _pageController = PageController(
+    initialPage: 0,
+    keepPage: true,
+  );
   Timer _timer;
 
   Future<void> _add() {
@@ -276,6 +280,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
+              _pageController.animateToPage(
+                index,
+                duration: Duration(milliseconds: 300),
+                curve: Curves.slowMiddle,
+              );
               _indexBottomNavBar = index;
             });
           },
@@ -288,23 +297,40 @@ class _StudentDashboardState extends State<StudentDashboard> {
             ? Center(
                 child: CircularProgressIndicator(),
               )
-            : RefreshIndicator(
-                onRefresh: () async {
-                  await _fetch();
+            : PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
                   setState(() {
-                    _type = Type.all;
+                    _indexBottomNavBar = index;
                   });
                 },
-                child: _indexBottomNavBar == 0
-                    ? DiscussionList(
-                        type: _type,
-                        from: User.student,
-                        to: User.admin,
-                      )
-                    : DiscussionList(
-                        from: User.student,
-                        to: User.faculty,
-                      ),
+                children: [
+                  RefreshIndicator(
+                    onRefresh: () async {
+                      await _fetch();
+                      setState(() {
+                        _type = Type.all;
+                      });
+                    },
+                    child: DiscussionList(
+                      type: _type,
+                      from: User.student,
+                      to: User.admin,
+                    ),
+                  ),
+                  RefreshIndicator(
+                    onRefresh: () async {
+                      await _fetch();
+                      setState(() {
+                        _type = Type.all;
+                      });
+                    },
+                    child: DiscussionList(
+                      from: User.student,
+                      to: User.faculty,
+                    ),
+                  ),
+                ],
               ),
       ),
     );

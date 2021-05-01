@@ -10,6 +10,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
   bool _isInit = true, _isLoading = false;
   List<Type> _type = [Type.all, Type.all];
   int _indexBottomNavBar = 0;
+  PageController _pageController = PageController(
+    initialPage: 0,
+    keepPage: true,
+  );
   AdminData _admin;
   Timer _timer;
 
@@ -177,6 +181,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
+              _pageController.animateToPage(index,
+                  duration: Duration(milliseconds: 300),
+                  curve: Curves.slowMiddle);
               _indexBottomNavBar = index;
             });
           },
@@ -189,30 +196,51 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ? Center(
                 child: CircularProgressIndicator(),
               )
-            : RefreshIndicator(
-                onRefresh: () async {
-                  await _fetch();
-                  if (_type[0] != Type.rating)
-                    setState(() {
-                      _type[0] = Type.all;
-                    });
+            : PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
                   setState(() {
-                    _type[1] = Type.all;
+                    _indexBottomNavBar = index;
                   });
                 },
-                child: _indexBottomNavBar == 0
-                    ? _type[_indexBottomNavBar] == Type.rating
+                children: [
+                  RefreshIndicator(
+                    onRefresh: () async {
+                      await _fetch();
+                      if (_type[0] != Type.rating)
+                        setState(() {
+                          _type[0] = Type.all;
+                        });
+                      setState(() {
+                        _type[1] = Type.all;
+                      });
+                    },
+                    child: _type[_indexBottomNavBar] == Type.rating
                         ? GraphList()
                         : DiscussionList(
                             type: _type[_indexBottomNavBar],
                             from: User.admin,
                             to: User.faculty,
-                          )
-                    : DiscussionList(
-                        type: _type[_indexBottomNavBar],
-                        from: User.admin,
-                        to: User.student,
-                      ),
+                          ),
+                  ),
+                  RefreshIndicator(
+                    onRefresh: () async {
+                      await _fetch();
+                      if (_type[0] != Type.rating)
+                        setState(() {
+                          _type[0] = Type.all;
+                        });
+                      setState(() {
+                        _type[1] = Type.all;
+                      });
+                    },
+                    child: DiscussionList(
+                      type: _type[_indexBottomNavBar],
+                      from: User.admin,
+                      to: User.student,
+                    ),
+                  ),
+                ],
               ),
       ),
     );

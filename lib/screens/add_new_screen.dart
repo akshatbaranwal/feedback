@@ -42,6 +42,7 @@ class _AddNewState extends State<AddNew> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Connection Error'),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -64,6 +65,7 @@ class _AddNewState extends State<AddNew> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Connection Error'),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -86,6 +88,7 @@ class _AddNewState extends State<AddNew> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Connection Error'),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -189,19 +192,36 @@ class _AddNewState extends State<AddNew> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Connection Error'),
+          duration: Duration(seconds: 2),
         ),
       );
     }
   }
 
-  Slider _slider(val, fn) {
-    return Slider(
-      value: val,
-      min: 0,
-      max: 100,
-      divisions: 100,
-      label: val.toString(),
-      onChanged: fn,
+  Widget _slider(category, val, fn) {
+    return Column(
+      children: [
+        SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              category,
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
+            Slider(
+              value: val,
+              min: 0,
+              max: 100,
+              divisions: 100,
+              label: val.toString(),
+              onChanged: fn,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -213,25 +233,34 @@ class _AddNewState extends State<AddNew> {
           DropdownButtonFormField(
             isExpanded: true,
             isDense: false,
-            items: _facultyStudent.ratings.map((e) {
-              return DropdownMenuItem(
-                child: Center(
-                  child: Column(
-                    children: [
-                      Text(e.facultyname),
-                      Text(
-                        e.coursename,
-                        style: TextStyle(
-                          color: Colors.black38,
-                          fontSize: 12,
+            items: _facultyStudent.ratings
+                .map(
+                  (e) => DropdownMenuItem(
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Text(e.facultyname),
+                          ],
                         ),
-                      ),
-                    ],
+                        Row(
+                          children: [
+                            Text(
+                              e.coursename,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.black38,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    value: '${e.facultyid}:${e.courseid}',
                   ),
-                ),
-                value: '${e.facultyid}:${e.courseid}',
-              );
-            }).toList(),
+                )
+                .toList(),
             onChanged: (id) {
               setState(() {
                 _facultyid = int.parse(id.split(':')[0]);
@@ -262,68 +291,32 @@ class _AddNewState extends State<AddNew> {
           if (_facultyid != null)
             Column(
               children: [
-                Text(
-                  'Lecture: $_lecture',
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-                _slider(_lecture, (value) {
+                _slider('Lecture', _lecture, (value) {
                   setState(() {
                     _lecture = value;
                   });
                 }),
-                Text(
-                  'Demo $_demo',
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-                _slider(_demo, (value) {
+                _slider('Demo', _demo, (value) {
                   setState(() {
                     _demo = value;
                   });
                 }),
-                Text(
-                  'Slides: $_slide',
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-                _slider(_slide, (value) {
+                _slider('Slides', _slide, (value) {
                   setState(() {
                     _slide = value;
                   });
                 }),
-                Text(
-                  'Lab: $_lab',
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-                _slider(_lab, (value) {
+                _slider('Lab', _lab, (value) {
                   setState(() {
                     _lab = value;
                   });
                 }),
-                Text(
-                  'Syllabus: $_syllabus',
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-                _slider(_syllabus, (value) {
+                _slider('Syllabus', _syllabus, (value) {
                   setState(() {
                     _syllabus = value;
                   });
                 }),
-                Text(
-                  'Interaction: $_interaction',
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-                _slider(_interaction, (value) {
+                _slider('Interaction', _interaction, (value) {
                   setState(() {
                     _interaction = value;
                   });

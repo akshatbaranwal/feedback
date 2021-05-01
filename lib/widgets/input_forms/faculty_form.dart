@@ -36,12 +36,14 @@ class _FacultyFormState extends State<FacultyForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Something went wrong'),
+          duration: Duration(seconds: 2),
         ));
       } else {
         if (!_isNew) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Update successful!'),
+            duration: Duration(seconds: 2),
           ));
         }
         Navigator.of(context).pushNamed(FacultyDashboard.routeName);
@@ -50,6 +52,7 @@ class _FacultyFormState extends State<FacultyForm> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Connection Error'),
+        duration: Duration(seconds: 2),
       ));
     }
   }
