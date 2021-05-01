@@ -283,7 +283,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
               _pageController.animateToPage(
                 index,
                 duration: Duration(milliseconds: 300),
-                curve: Curves.slowMiddle,
+                curve: Curves.linear,
               );
               _indexBottomNavBar = index;
             });

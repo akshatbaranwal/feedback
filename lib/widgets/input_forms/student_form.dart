@@ -60,6 +60,7 @@ class _StudentFormState extends State<StudentForm> {
           duration: Duration(seconds: 2),
         ),
       );
+      throw error;
     }
   }
 
@@ -169,6 +170,8 @@ class _StudentFormState extends State<StudentForm> {
               textInputAction: TextInputAction.next,
               validator: (enroll) {
                 if (enroll.isEmpty) return 'Enter the enrollment number';
+                if (_student.enrollList.contains(enroll))
+                  return 'Already taken';
                 return null;
               },
               onSaved: (enroll) {
