@@ -23,11 +23,16 @@ class StudentData with ChangeNotifier {
   StudentData(this.connection);
 
   var _emailList = [];
+  var _enrollList = [];
   var _branchList = [];
   Student _data;
 
   List<String> get emailList {
     return [..._emailList];
+  }
+
+  List<String> get enrollList {
+    return [..._enrollList];
   }
 
   List<dynamic> get branchList {
@@ -81,6 +86,26 @@ class StudentData with ChangeNotifier {
         });
       }
       _emailList = loadedEmails;
+      notifyListeners();
+    } catch (error) {
+      throw (error);
+    }
+  }
+
+  Future<void> fetchEnrolls() async {
+    if (connection.isClosed) await connection.open();
+    try {
+      final response = await connection.query('''
+      select enroll
+      from student
+      ''');
+      final loadedEnrolls = [];
+      if (response.isNotEmpty) {
+        response.forEach((val) {
+          loadedEnrolls.add(val[0]);
+        });
+      }
+      _enrollList = loadedEnrolls;
       notifyListeners();
     } catch (error) {
       throw (error);
@@ -159,6 +184,7 @@ class StudentData with ChangeNotifier {
           year: response[0][6],
         );
         _emailList.add(temp.email);
+        _enrollList.add(temp.enroll);
       }
       _data = temp;
       notifyListeners();
@@ -181,6 +207,7 @@ class StudentData with ChangeNotifier {
         },
       );
       _emailList.remove(_data.email);
+      _enrollList.remove(_data.enroll);
       _data = null;
       notifyListeners();
     } catch (error) {

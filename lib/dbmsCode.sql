@@ -110,7 +110,6 @@ CREATE TABLE faculty (
   email text unique not null,
   password text not null,
   name text not null,
-  courseid int references course (courseid)
 );
 
 -- INSERT INTO faculty (email, password, name, courseid)
@@ -259,7 +258,7 @@ CREATE TABLE student (
   email text unique not null, 
   password text not null,
   name text not null,
-  branchid int references branch (branchid),
+  branchid int references branch (branchid) on update cascade on delete cascade,
   year int check(year > 1999) not null
 );
     
@@ -388,7 +387,7 @@ CREATE TABLE branch_course (
   
 CREATE TABLE admin_faculty (
   id serial primary key not null,
-  facultyid int references faculty (facultyid) on delete cascade on update cascade,
+  facultyid int references faculty (facultyid) on update cascade on delete cascade,
   type text not null check ( type = 'opinion' or type = 'request' or type = 'query' ),
   subject text not null,
   body text not null,
@@ -416,7 +415,7 @@ CREATE TABLE admin_faculty (
 
 CREATE TABLE admin_student (
   id serial primary key not null,
-  studentid int references student (studentid) on delete cascade on update cascade,
+  studentid int references student (studentid) on update cascade on delete cascade,
   type text not null check ( type = 'opinion' or type = 'request' or type = 'query' ),
   subject text not null,
   body text not null,
@@ -435,8 +434,8 @@ CREATE TABLE admin_student (
 
 CREATE TABLE faculty_student (
   id serial primary key not null,
-  studentid int references student (studentid) on delete cascade on update cascade,
-  facultyid int references faculty (facultyid) on delete cascade on update cascade,
+  studentid int references student (studentid) on update cascade on delete cascade,
+  facultyid int references faculty (facultyid) on update cascade on delete cascade,
   subject text not null,
   body text not null,
   created_at timestamptz not null default now(),
@@ -451,15 +450,16 @@ CREATE TABLE faculty_student (
 --   ('1', '20', 'chutiya ho?', 'maar khani hai sale bsdk? samajh nai ata transformer fat gaya tha????????? bsdk');
 
 CREATE TABLE faculty_rating (
-  facultyid int references faculty (facultyid) on delete cascade on update cascade,
-  studentid int references student (studentid) on delete cascade on update cascade,
+  facultyid int references faculty (facultyid) on update cascade on delete cascade,
+  studentid int references student (studentid) on update cascade on delete cascade,
   lecture int check ( lecture between 0 and 100),
   demo int check ( demo between 0 and 100),
   slide int check ( slide between 0 and 100),
   lab int check ( lab between 0 and 100),
   syllabus int check ( syllabus between 0 and 100),
   interaction int check ( interaction between 0 and 100),
-  primary key ( facultyid, studentid )
+  courseid int references course (courseid) on update cascade on delete cascade,
+  primary key ( facultyid, studentid, courseid )
 );
 
 -- INSERT INTO faculty_rating
@@ -470,7 +470,7 @@ CREATE TABLE faculty_rating (
 --  ('2', '1', '10', '20', '30', '40', '50', '60');
 
 CREATE TABLE student_faculty (
-  id int primary key references faculty_student (id) on delete cascade on update cascade,
+  id int primary key references faculty_student (id) on update cascade on delete cascade,
   reply text not null,
   created_at timestamptz not null default now(),
   modified_at timestamptz not null default now()
@@ -485,7 +485,7 @@ CREATE TABLE student_faculty (
 
 
 CREATE TABLE student_admin (
-  id int primary key references admin_student (id) on delete cascade on update cascade,
+  id int primary key references admin_student (id) on update cascade on delete cascade,
   reply text not null,
   created_at timestamptz not null default now(),
   modified_at timestamptz not null default now()
@@ -501,7 +501,7 @@ CREATE TABLE student_admin (
 --   ('6', 'nahi nahi nahi nahi nahi nahi nahi nahi nahi nahi nahi');
 
 CREATE TABLE faculty_admin (
-  id int primary key references admin_faculty (id) on delete cascade on update cascade,
+  id int primary key references admin_faculty (id) on update cascade on delete cascade,
   reply text not null,
   created_at timestamptz not null default now(),
   modified_at timestamptz not null default now()

@@ -265,6 +265,7 @@ class _LoadingState extends State<Loading> {
     await Future.wait([
       Provider.of<StudentData>(context, listen: false).fetchEmails(),
       Provider.of<StudentData>(context, listen: false).fetchBranches(),
+      Provider.of<StudentData>(context, listen: false).fetchEnrolls(),
       Provider.of<FacultyData>(context, listen: false).fetchEmails(),
       Provider.of<FacultyData>(context, listen: false).fetchCourses(),
       Provider.of<AdminData>(context, listen: false).fetchEmails(),

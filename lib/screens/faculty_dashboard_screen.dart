@@ -270,9 +270,11 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
-              _pageController.animateToPage(index,
-                  duration: Duration(milliseconds: 300),
-                  curve: Curves.slowMiddle);
+              _pageController.animateToPage(
+                index,
+                duration: Duration(milliseconds: 300),
+                curve: Curves.linear,
+              );
               _indexBottomNavBar = index;
             });
           },

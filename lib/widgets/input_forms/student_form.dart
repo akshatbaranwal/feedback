@@ -169,6 +169,8 @@ class _StudentFormState extends State<StudentForm> {
               textInputAction: TextInputAction.next,
               validator: (enroll) {
                 if (enroll.isEmpty) return 'Enter the enrollment number';
+                if (_student.enrollList.contains(enroll))
+                  return 'Already taken';
                 return null;
               },
               onSaved: (enroll) {

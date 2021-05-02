@@ -1,16 +1,44 @@
-# feedback
+# Feedback Management System
 
-A new Flutter project.
+A Simple Feedback Management System made for IIITA.  
+It considers 3 types of user profiles: Student, Faculty, Admin.  
+Students and Faculty can send a query, request or an opinion to the Admin.  
+Students can give Faculty a rating based on their teaching performance and overall experience.  
+Admins and Faculties can reply back.  
+  
+#### [Entity Relationship Diagram](misc/ER_Diagram.pdf)
+
+<br>
+
+## Technology Used
+
+ - Flutter
+ - PostgreSQL (database stored on Heroku)
+
+<br>
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+```
+git clone https://github.com/AkshatBaranwal/feedback.git
+cd feedback
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+<br>
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Screenshots
+<p>
+  <img src="misc/1.png" width=130>
+  <img src="misc/2.png" width=130>
+  <img src="misc/3.png" width=130>
+  <img src="misc/4.png" width=130>
+  <img src="misc/5.png" width=130>
+  <img src="misc/6.png" width=130>
+  <img src="misc/7.png" width=130>
+  <img src="misc/8.png" width=130>
+  <img src="misc/9.png" width=130>
+  <img src="misc/10.png" width=130>
+  <img src="misc/11.png" width=130>
+  <img src="misc/12.png" width=130>
+</p>
