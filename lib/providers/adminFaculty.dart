@@ -29,9 +29,6 @@ class AdminFaculty {
 }
 
 class AdminFacultyList with ChangeNotifier {
-  final connection;
-  AdminFacultyList(this.connection);
-
   List<AdminFaculty> _items = [];
 
   List<AdminFaculty> get items {
@@ -40,18 +37,40 @@ class AdminFacultyList with ChangeNotifier {
   }
 
   Future<void> fetch({facultyid}) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = facultyid == null
           ? await connection.mappedResultsQuery('''
-    select *
+    select 
+      admin_faculty.id,
+      faculty.name,
+      faculty.email,
+      admin_faculty.type,
+      admin_faculty.subject,
+      admin_faculty.body,
+      admin_faculty.created_at,
+      admin_faculty.modified_at,
+      faculty_admin.reply,
+      faculty_admin.created_at,
+      faculty_admin.modified_at
     from admin_faculty
     left join faculty_admin using (id)
     join faculty using (facultyid)
     ''')
           : await connection.mappedResultsQuery(
               '''
-    select *
+    select 
+      admin_faculty.id,
+      faculty.name,
+      faculty.email,
+      admin_faculty.type,
+      admin_faculty.subject,
+      admin_faculty.body,
+      admin_faculty.created_at,
+      admin_faculty.modified_at,
+      faculty_admin.reply,
+      faculty_admin.created_at,
+      faculty_admin.modified_at
     from admin_faculty
     left join faculty_admin using (id)
     join faculty using (facultyid)
@@ -90,14 +109,14 @@ class AdminFacultyList with ChangeNotifier {
     @required reply,
     @required id,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     final index = _items.indexWhere((element) => element.id == id);
     try {
       final response = await connection.mappedResultsQuery(
         '''
     insert into faculty_admin (id, reply)
     values (@id, @reply)
-    returning *
+    returning faculty_admin.created_at, faculty_admin.modified_at
     ''',
         substitutionValues: {
           'id': id,
@@ -114,7 +133,7 @@ class AdminFacultyList with ChangeNotifier {
           body: _items[index].body,
           createdAt: _items[index].createdAt,
           modifiedAt: _items[index].modifiedAt,
-          reply: response[0]['faculty_admin']['reply'],
+          reply: reply,
           replyCreatedAt: response[0]['faculty_admin']['created_at']?.toLocal(),
           replyModifiedAt:
               response[0]['faculty_admin']['modified_at']?.toLocal(),
@@ -128,21 +147,19 @@ class AdminFacultyList with ChangeNotifier {
 
   Future<void> add({
     @required facultyid,
+    @required facultyname,
+    @required facultyemail,
     @required type,
     @required subject,
     @required body,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.mappedResultsQuery(
         '''
-    with inserted as (
-      insert into admin_faculty (facultyid, type, subject, body)
-      values (@facultyid, @type, @subject, @body)
-      returning *
-    ) select *
-    from inserted
-    join faculty using (facultyid)
+    insert into admin_faculty (facultyid, type, subject, body)
+    values (@facultyid, @type, @subject, @body)
+    returning admin_faculty.id, admin_faculty.created_at, admin_faculty.modified_at
     ''',
         substitutionValues: {
           'facultyid': facultyid,
@@ -154,11 +171,11 @@ class AdminFacultyList with ChangeNotifier {
       if (response.isNotEmpty) {
         _items.add(AdminFaculty(
           id: response[0]['admin_faculty']['id'],
-          facultyname: response[0]['faculty']['name'],
-          facultyemail: response[0]['faculty']['email'],
-          type: response[0]['admin_faculty']['type'],
-          subject: response[0]['admin_faculty']['subject'],
-          body: response[0]['admin_faculty']['body'],
+          facultyname: facultyname,
+          facultyemail: facultyemail,
+          type: type,
+          subject: subject,
+          body: body,
           createdAt: response[0]['admin_faculty']['created_at']?.toLocal(),
           modifiedAt: response[0]['admin_faculty']['modified_at']?.toLocal(),
           reply: null,

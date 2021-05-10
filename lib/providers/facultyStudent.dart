@@ -1,5 +1,3 @@
-import 'package:collection/collection.dart';
-
 import '../import.dart';
 
 class FacultyStudent {
@@ -61,9 +59,6 @@ class FacultyRating {
 }
 
 class FacultyStudentList with ChangeNotifier {
-  final connection;
-  FacultyStudentList(this.connection);
-
   List<FacultyStudent> _items = [];
   List<FacultyRating> _ratings = [];
 
@@ -80,12 +75,25 @@ class FacultyStudentList with ChangeNotifier {
     @required User from,
     int id,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     if (id != null)
       try {
         final response = from == User.student
             ? await connection.mappedResultsQuery('''
-    select *
+    select
+      faculty_student.id,
+      branch_sem.sem,
+      student.email,
+      faculty.email,
+      student.name,
+      faculty.name,
+      faculty_student.subject,
+      faculty_student.body,
+      faculty_student.created_at,
+      faculty_student.modified_at,
+      student_faculty.reply,
+      student_faculty.created_at,
+      student_faculty.modified_at
     from faculty_student
     left join student_faculty using (id)
     join student using (studentid)
@@ -96,7 +104,20 @@ class FacultyStudentList with ChangeNotifier {
                 'studentid': id,
               })
             : await connection.mappedResultsQuery('''
-    select *
+    select
+      faculty_student.id,
+      branch_sem.sem,
+      student.email,
+      faculty.email,
+      student.name,
+      faculty.name,
+      faculty_student.subject,
+      faculty_student.body,
+      faculty_student.created_at,
+      faculty_student.modified_at,
+      student_faculty.reply,
+      student_faculty.created_at,
+      student_faculty.modified_at
     from faculty_student
     left join student_faculty using (id)
     join student using (studentid)
@@ -303,14 +324,14 @@ class FacultyStudentList with ChangeNotifier {
     @required reply,
     @required id,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     final index = _items.indexWhere((element) => element.id == id);
     try {
       final response = await connection.mappedResultsQuery(
         '''
     insert into student_faculty (id, reply)
     values (@id, @reply)
-    returning *
+    returning student_faculty.created_at, student_faculty.modified_at
     ''',
         substitutionValues: {
           'id': id,
@@ -329,7 +350,7 @@ class FacultyStudentList with ChangeNotifier {
           body: _items[index].body,
           createdAt: _items[index].createdAt,
           modifiedAt: _items[index].modifiedAt,
-          reply: response[0]['student_faculty']['reply'],
+          reply: reply,
           replyCreatedAt:
               response[0]['student_faculty']['created_at']?.toLocal(),
           replyModifiedAt:
@@ -353,7 +374,7 @@ class FacultyStudentList with ChangeNotifier {
     @required interaction,
     @required courseid,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.mappedResultsQuery(
         '''
@@ -361,7 +382,7 @@ class FacultyStudentList with ChangeNotifier {
       values (@facultyid, @studentid, @lecture, @demo, @slide, @lab, @syllabus, @interaction, @courseid)
       on conflict (facultyid, studentid, courseid) do UPDATE
       set facultyid = @facultyid, studentid = @studentid, lecture = @lecture, demo = @demo, slide = @slide, lab = @lab, syllabus = @syllabus, interaction = @interaction, courseid = @courseid
-      returning *
+      returning studentid
       ''',
         substitutionValues: {
           'facultyid': facultyid,
@@ -402,12 +423,15 @@ class FacultyStudentList with ChangeNotifier {
   }
 
   Future<void> add({
+    @required sem,
+    @required studentemail,
+    @required studentname,
     @required facultyid,
     @required studentid,
     @required subject,
     @required body,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.mappedResultsQuery(
         '''
@@ -415,11 +439,9 @@ class FacultyStudentList with ChangeNotifier {
       insert into faculty_student (studentid, facultyid, subject, body)
       values (@studentid, @facultyid, @subject, @body)
       returning *
-    ) select *
+    ) select inserted.id, inserted.created_at, inserted.modified_at, faculty.name, faculty.email
     from inserted
-    join student using (studentid)
     join faculty using (facultyid)
-    join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2)
     ''',
         substitutionValues: {
           'studentid': studentid,
@@ -431,13 +453,13 @@ class FacultyStudentList with ChangeNotifier {
       if (response.isNotEmpty) {
         _items.add(FacultyStudent(
           id: response[0]['faculty_student']['id'],
-          sem: response[0]['branch_sem']['sem'],
-          studentemail: response[0]['student']['email'],
+          sem: sem,
+          studentemail: studentemail,
           facultyemail: response[0]['faculty']['email'],
-          studentname: response[0]['student']['name'],
+          studentname: studentname,
           facultyname: response[0]['faculty']['name'],
-          subject: response[0]['faculty_student']['subject'],
-          body: response[0]['faculty_student']['body'],
+          subject: subject,
+          body: body,
           createdAt: response[0]['faculty_student']['created_at']?.toLocal(),
           modifiedAt: response[0]['faculty_student']['modified_at']?.toLocal(),
           reply: null,

@@ -33,9 +33,6 @@ class AdminStudent {
 }
 
 class AdminStudentList with ChangeNotifier {
-  final connection;
-  AdminStudentList(this.connection);
-
   List<AdminStudent> _items = [];
 
   List<AdminStudent> get items {
@@ -44,11 +41,24 @@ class AdminStudentList with ChangeNotifier {
   }
 
   Future<void> fetch({studentid}) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = studentid == null
           ? await connection.mappedResultsQuery('''
-    select *
+    select
+      admin_student.id,
+      student.name,
+      student.email,
+      branch_sem.sem,
+      branch.branchname,
+      admin_student.type,
+      admin_student.subject,
+      admin_student.body,
+      admin_student.created_at,
+      admin_student.modified_at,
+      student_admin.reply,
+      student_admin.created_at,
+      student_admin.modified_at
     from admin_student
     left join student_admin using (id)
     join student using (studentid)
@@ -57,7 +67,20 @@ class AdminStudentList with ChangeNotifier {
     ''')
           : await connection.mappedResultsQuery(
               '''
-    select *
+    select
+      admin_student.id,
+      student.name,
+      student.email,
+      branch_sem.sem,
+      branch.branchname,
+      admin_student.type,
+      admin_student.subject,
+      admin_student.body,
+      admin_student.created_at,
+      admin_student.modified_at,
+      student_admin.reply,
+      student_admin.created_at,
+      student_admin.modified_at
     from admin_student
     left join student_admin using (id)
     join student using (studentid)
@@ -100,14 +123,14 @@ class AdminStudentList with ChangeNotifier {
     @required reply,
     @required id,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     final index = _items.indexWhere((element) => element.id == id);
     try {
       final response = await connection.mappedResultsQuery(
         '''
     insert into student_admin (id, reply)
     values (@id, @reply)
-    returning *
+    returning student_admin.created_at, student_admin.modified_at
     ''',
         substitutionValues: {
           'id': id,
@@ -126,7 +149,7 @@ class AdminStudentList with ChangeNotifier {
           body: _items[index].body,
           createdAt: _items[index].createdAt,
           modifiedAt: _items[index].modifiedAt,
-          reply: response[0]['student_admin']['reply'],
+          reply: reply,
           replyCreatedAt: response[0]['student_admin']['created_at']?.toLocal(),
           replyModifiedAt:
               response[0]['student_admin']['modified_at']?.toLocal(),
@@ -139,24 +162,22 @@ class AdminStudentList with ChangeNotifier {
   }
 
   Future<void> add({
+    @required studentname,
+    @required studentemail,
+    @required sem,
+    @required branch,
     @required studentid,
     @required type,
     @required subject,
     @required body,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.mappedResultsQuery(
         '''
-    with inserted as (
-      insert into admin_student (studentid, type, subject, body)
-      values (@studentid, @type, @subject, @body)
-      returning *
-    ) select *
-    from inserted
-    join student using (studentid)
-    join branch_sem on branch_sem.branchid = student.branchid and branch_sem.sem = (extract (month from now())::int / 6 + (extract (year from now())::int - student.year) * 2) 
-    join branch on branch.branchid = branch_sem.branchid
+    insert into admin_student (studentid, type, subject, body)
+    values (@studentid, @type, @subject, @body)
+    returning admin_student.id, admin_student.created_at, admin_student.modified_at
     ''',
         substitutionValues: {
           'studentid': studentid,
@@ -168,13 +189,13 @@ class AdminStudentList with ChangeNotifier {
       if (response.isNotEmpty) {
         _items.add(AdminStudent(
           id: response[0]['admin_student']['id'],
-          studentname: response[0]['student']['name'],
-          studentemail: response[0]['student']['email'],
-          sem: response[0]['branch_sem']['sem'],
-          branch: response[0]['branch']['branchname'],
-          type: response[0]['admin_student']['type'],
-          subject: response[0]['admin_student']['subject'],
-          body: response[0]['admin_student']['body'],
+          studentname: studentname,
+          studentemail: studentemail,
+          sem: sem,
+          branch: branch,
+          type: type,
+          subject: subject,
+          body: body,
           createdAt: response[0]['admin_student']['created_at']?.toLocal(),
           modifiedAt: response[0]['admin_student']['modified_at']?.toLocal(),
           reply: null,

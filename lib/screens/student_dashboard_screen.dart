@@ -22,89 +22,101 @@ class _StudentDashboardState extends State<StudentDashboard> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text("It's a"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: _indexBottomNavBar == 0
-              ? [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(ctx).popAndPushNamed(
-                        AddNew.routeName,
-                        arguments: {
-                          'type': Type.opinion,
-                          'from': User.student,
+        content: Container(
+          height: _indexBottomNavBar == 0 ? 150 : 100,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: _indexBottomNavBar == 0
+                ? [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).popAndPushNamed(
+                            AddNew.routeName,
+                            arguments: {
+                              'type': Type.opinion,
+                              'from': User.student,
+                            },
+                          );
                         },
-                      );
-                    },
-                    child: Text(
-                      'Opinion',
-                      style: TextStyle(fontSize: 17),
+                        child: Text(
+                          'Opinion',
+                          style: TextStyle(fontSize: 17),
+                        ),
+                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(ctx).popAndPushNamed(
-                        AddNew.routeName,
-                        arguments: {
-                          'type': Type.request,
-                          'from': User.student,
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).popAndPushNamed(
+                            AddNew.routeName,
+                            arguments: {
+                              'type': Type.request,
+                              'from': User.student,
+                            },
+                          );
                         },
-                      );
-                    },
-                    child: Text(
-                      'Request',
-                      style: TextStyle(fontSize: 17),
+                        child: Text(
+                          'Request',
+                          style: TextStyle(fontSize: 17),
+                        ),
+                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(ctx).popAndPushNamed(
-                        AddNew.routeName,
-                        arguments: {
-                          'type': Type.query,
-                          'from': User.student,
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).popAndPushNamed(
+                            AddNew.routeName,
+                            arguments: {
+                              'type': Type.query,
+                              'from': User.student,
+                            },
+                          );
                         },
-                      );
-                    },
-                    child: Text(
-                      'Query',
-                      style: TextStyle(fontSize: 17),
+                        child: Text(
+                          'Query',
+                          style: TextStyle(fontSize: 17),
+                        ),
+                      ),
                     ),
-                  ),
-                ]
-              : [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(ctx).popAndPushNamed(
-                        AddNew.routeName,
-                        arguments: {
-                          'type': Type.feedback,
-                          'from': User.student,
+                  ]
+                : [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).popAndPushNamed(
+                            AddNew.routeName,
+                            arguments: {
+                              'type': Type.feedback,
+                              'from': User.student,
+                            },
+                          );
                         },
-                      );
-                    },
-                    child: Text(
-                      'Query',
-                      style: TextStyle(fontSize: 17),
+                        child: Text(
+                          'Query',
+                          style: TextStyle(fontSize: 17),
+                        ),
+                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(ctx).popAndPushNamed(
-                        AddNew.routeName,
-                        arguments: {
-                          'type': Type.rating,
-                          'from': User.student,
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(ctx).popAndPushNamed(
+                            AddNew.routeName,
+                            arguments: {
+                              'type': Type.rating,
+                              'from': User.student,
+                            },
+                          );
                         },
-                      );
-                    },
-                    child: Text(
-                      'Feedback',
-                      style: TextStyle(fontSize: 17),
+                        child: Text(
+                          'Feedback',
+                          style: TextStyle(fontSize: 17),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+          ),
         ),
       ),
     );
@@ -207,6 +219,13 @@ class _StudentDashboardState extends State<StudentDashboard> {
     ]);
   }
 
+  Future<void> _onRefresh() async {
+    await _fetch();
+    setState(() {
+      _type = Type.all;
+    });
+  }
+
   @override
   void didChangeDependencies() {
     if (_isInit) {
@@ -280,16 +299,12 @@ class _StudentDashboardState extends State<StudentDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
-              _pageController.animateToPage(
-                index,
-                duration: Duration(milliseconds: 300),
-                curve: Curves.linear,
-              );
+              _pageController.jumpToPage(index);
               _indexBottomNavBar = index;
             });
           },
           selectedLabelStyle: TextStyle(
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -298,6 +313,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                 child: CircularProgressIndicator(),
               )
             : PageView(
+                physics: CustomPageViewScrollPhysics(),
                 controller: _pageController,
                 onPageChanged: (index) {
                   setState(() {
@@ -305,30 +321,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   });
                 },
                 children: [
-                  RefreshIndicator(
-                    onRefresh: () async {
-                      await _fetch();
-                      setState(() {
-                        _type = Type.all;
-                      });
-                    },
-                    child: DiscussionList(
-                      type: _type,
-                      from: User.student,
-                      to: User.admin,
-                    ),
+                  DiscussionList(
+                    type: _type,
+                    from: User.student,
+                    to: User.admin,
+                    onRefresh: _onRefresh,
                   ),
-                  RefreshIndicator(
-                    onRefresh: () async {
-                      await _fetch();
-                      setState(() {
-                        _type = Type.all;
-                      });
-                    },
-                    child: DiscussionList(
-                      from: User.student,
-                      to: User.faculty,
-                    ),
+                  DiscussionList(
+                    from: User.student,
+                    to: User.faculty,
+                    onRefresh: _onRefresh,
                   ),
                 ],
               ),

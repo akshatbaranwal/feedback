@@ -22,56 +22,64 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text("It's a"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).popAndPushNamed(
-                  AddNew.routeName,
-                  arguments: {
-                    'type': Type.opinion,
-                    'from': User.faculty,
+        content: Container(
+          height: 150,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).popAndPushNamed(
+                      AddNew.routeName,
+                      arguments: {
+                        'type': Type.opinion,
+                        'from': User.faculty,
+                      },
+                    );
                   },
-                );
-              },
-              child: Text(
-                'Opinion',
-                style: TextStyle(fontSize: 17),
+                  child: Text(
+                    'Opinion',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).popAndPushNamed(
-                  AddNew.routeName,
-                  arguments: {
-                    'type': Type.request,
-                    'from': User.faculty,
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).popAndPushNamed(
+                      AddNew.routeName,
+                      arguments: {
+                        'type': Type.request,
+                        'from': User.faculty,
+                      },
+                    );
                   },
-                );
-              },
-              child: Text(
-                'Request',
-                style: TextStyle(fontSize: 17),
+                  child: Text(
+                    'Request',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).popAndPushNamed(
-                  AddNew.routeName,
-                  arguments: {
-                    'type': Type.query,
-                    'from': User.faculty,
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).popAndPushNamed(
+                      AddNew.routeName,
+                      arguments: {
+                        'type': Type.query,
+                        'from': User.faculty,
+                      },
+                    );
                   },
-                );
-              },
-              child: Text(
-                'Query',
-                style: TextStyle(fontSize: 17),
+                  child: Text(
+                    'Query',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -174,6 +182,13 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
     ]);
   }
 
+  Future<void> _onRefresh() async {
+    await _fetch();
+    setState(() {
+      _type = Type.all;
+    });
+  }
+
   @override
   void didChangeDependencies() {
     if (_isInit) {
@@ -239,7 +254,7 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                     insetPadding: const EdgeInsets.all(10),
                     child: Container(
                       height: 400,
-                      child: GraphList(),
+                      child: GraphList(_onRefresh),
                     ),
                   ),
                 );
@@ -270,16 +285,12 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
-              _pageController.animateToPage(
-                index,
-                duration: Duration(milliseconds: 300),
-                curve: Curves.linear,
-              );
+              _pageController.jumpToPage(index);
               _indexBottomNavBar = index;
             });
           },
           selectedLabelStyle: TextStyle(
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -288,6 +299,7 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                 child: CircularProgressIndicator(),
               )
             : PageView(
+                physics: CustomPageViewScrollPhysics(),
                 controller: _pageController,
                 onPageChanged: (index) {
                   setState(() {
@@ -295,30 +307,16 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
                   });
                 },
                 children: [
-                  RefreshIndicator(
-                    onRefresh: () async {
-                      await _fetch();
-                      setState(() {
-                        _type = Type.all;
-                      });
-                    },
-                    child: DiscussionList(
-                      type: _type,
-                      from: User.faculty,
-                      to: User.admin,
-                    ),
+                  DiscussionList(
+                    onRefresh: _onRefresh,
+                    type: _type,
+                    from: User.faculty,
+                    to: User.admin,
                   ),
-                  RefreshIndicator(
-                    onRefresh: () async {
-                      await _fetch();
-                      setState(() {
-                        _type = Type.all;
-                      });
-                    },
-                    child: DiscussionList(
-                      from: User.faculty,
-                      to: User.student,
-                    ),
+                  DiscussionList(
+                    onRefresh: _onRefresh,
+                    from: User.faculty,
+                    to: User.student,
                   ),
                 ],
               ),

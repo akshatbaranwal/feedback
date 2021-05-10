@@ -7,6 +7,7 @@ class Student {
   final String name;
   final int branchid;
   final int year;
+  final int sem;
 
   Student({
     @required this.studentid,
@@ -15,13 +16,11 @@ class Student {
     @required this.name,
     @required this.branchid,
     @required this.year,
+    @required this.sem,
   });
 }
 
 class StudentData with ChangeNotifier {
-  final connection;
-  StudentData(this.connection);
-
   var _emailList = [];
   var _enrollList = [];
   var _branchList = [];
@@ -49,11 +48,14 @@ class StudentData with ChangeNotifier {
             name: _data.name,
             studentid: _data.studentid,
             year: _data.year,
+            sem: (DateTime.now().month / 6 +
+                    (DateTime.now().year - _data.year) * 2)
+                .toInt(),
           );
   }
 
   Future<void> fetchBranches() async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query('''
       select *
@@ -73,7 +75,7 @@ class StudentData with ChangeNotifier {
   }
 
   Future<void> fetchEmails() async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query('''
       select email 
@@ -93,7 +95,7 @@ class StudentData with ChangeNotifier {
   }
 
   Future<void> fetchEnrolls() async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query('''
       select enroll
@@ -116,7 +118,7 @@ class StudentData with ChangeNotifier {
     @required email,
     @required password,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query(
         '''
@@ -139,6 +141,9 @@ class StudentData with ChangeNotifier {
           name: response[0][3],
           branchid: response[0][4],
           year: response[0][5],
+          sem: (DateTime.now().month / 6 +
+                  (DateTime.now().year - response[0][5]) * 2)
+              .toInt(),
         );
       }
       _data = temp;
@@ -156,7 +161,7 @@ class StudentData with ChangeNotifier {
     @required branchid,
     @required year,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query(
         '''
@@ -182,6 +187,9 @@ class StudentData with ChangeNotifier {
           name: response[0][4],
           branchid: response[0][5],
           year: response[0][6],
+          sem: (DateTime.now().month / 6 +
+                  (DateTime.now().year - response[0][6]) * 2)
+              .toInt(),
         );
         _emailList.add(temp.email);
         _enrollList.add(temp.enroll);
@@ -194,7 +202,7 @@ class StudentData with ChangeNotifier {
   }
 
   Future<void> delete() async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       await connection.query(
         '''
@@ -221,7 +229,7 @@ class StudentData with ChangeNotifier {
     @required branchid,
     @required year,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query(
         '''
@@ -242,6 +250,10 @@ class StudentData with ChangeNotifier {
         },
       );
       if (response.isNotEmpty) {
+        if (enroll != _data.enroll) {
+          _enrollList.remove(enroll);
+          _enrollList.add(enroll);
+        }
         _data = Student(
           studentid: _data.studentid,
           enroll: response[0][1],
@@ -249,6 +261,9 @@ class StudentData with ChangeNotifier {
           name: response[0][4],
           branchid: response[0][5],
           year: response[0][6],
+          sem: (DateTime.now().month / 6 +
+                  (DateTime.now().year - response[0][6]) * 2)
+              .toInt(),
         );
         notifyListeners();
       }
@@ -258,7 +273,7 @@ class StudentData with ChangeNotifier {
   }
 
   Future<void> updatePassword(password) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       await connection.query(
         '''

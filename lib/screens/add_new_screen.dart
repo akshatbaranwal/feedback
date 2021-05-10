@@ -18,6 +18,7 @@ class _AddNewState extends State<AddNew> {
   int _facultyid, _courseid;
   double _lecture, _demo, _slide, _lab, _syllabus, _interaction;
   String _subject, _body;
+  bool _firstTime = false;
 
   Future<void> _saveForm() async {
     final isValid = _form.currentState.validate();
@@ -26,6 +27,9 @@ class _AddNewState extends State<AddNew> {
     if (_type == Type.feedback) {
       try {
         await _facultyStudent.add(
+          sem: _student.data.sem,
+          studentemail: _student.data.email,
+          studentname: _student.data.name,
           facultyid: _facultyid,
           studentid: _student.data.studentid,
           subject: _subject,
@@ -49,6 +53,11 @@ class _AddNewState extends State<AddNew> {
     } else if (_from == User.student) {
       try {
         await _adminStudent.add(
+          studentemail: _student.data.email,
+          studentname: _student.data.name,
+          sem: _student.data.sem,
+          branch: _student.branchList
+              .firstWhere((element) => element[0] == _student.data.branchid)[1],
           type: _type.toString().split('.').last,
           studentid: _student.data.studentid,
           subject: _subject,
@@ -72,6 +81,8 @@ class _AddNewState extends State<AddNew> {
     } else
       try {
         await _adminFaculty.add(
+          facultyemail: _faculty.data.email,
+          facultyname: _faculty.data.name,
           type: _type.toString().split('.').last,
           facultyid: _faculty.data.facultyid,
           subject: _subject,
@@ -98,6 +109,7 @@ class _AddNewState extends State<AddNew> {
     return Form(
       key: _form,
       child: ListView(
+        padding: const EdgeInsets.all(20),
         children: [
           if (_type == Type.feedback) ...[
             DropdownButtonFormField(
@@ -206,7 +218,7 @@ class _AddNewState extends State<AddNew> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              category,
+              "  $category",
               style: TextStyle(
                 fontSize: 16,
               ),
@@ -229,6 +241,7 @@ class _AddNewState extends State<AddNew> {
     return Form(
       key: _form,
       child: ListView(
+        padding: const EdgeInsets.all(20),
         children: [
           DropdownButtonFormField(
             isExpanded: true,
@@ -238,23 +251,17 @@ class _AddNewState extends State<AddNew> {
                   (e) => DropdownMenuItem(
                     child: Column(
                       children: [
-                        Row(
-                          children: [
-                            Text(e.facultyname),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              e.coursename,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Colors.black38,
-                                fontSize: 12,
-                              ),
+                        Row(children: [Text(e.facultyname)]),
+                        Row(children: [
+                          Text(
+                            e.coursename,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.black38,
+                              fontSize: 12,
                             ),
-                          ],
-                        ),
+                          ),
+                        ]),
                       ],
                     ),
                     value: '${e.facultyid}:${e.courseid}',
@@ -275,6 +282,7 @@ class _AddNewState extends State<AddNew> {
                 _syllabus = _facultyStudent.ratings[_index].syllabus ?? 50;
                 _interaction =
                     _facultyStudent.ratings[_index].interaction ?? 50;
+                _firstTime = _facultyStudent.ratings[_index].lecture == null;
               });
             },
             decoration: InputDecoration(
@@ -321,10 +329,11 @@ class _AddNewState extends State<AddNew> {
                     _interaction = value;
                   });
                 }),
+                SizedBox(height: 10),
                 ElevatedButton.icon(
                   onPressed: _saveRating,
                   icon: Icon(Icons.done),
-                  label: Text('Update'),
+                  label: Text(_firstTime ? 'Add' : 'Update'),
                 ),
               ],
             ),
@@ -356,10 +365,7 @@ class _AddNewState extends State<AddNew> {
                   : 'Add ${_type.toString().split('.').last}',
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: _type == Type.rating ? _ratingBuilder() : _formBuilder(),
-      ),
+      body: _type == Type.rating ? _ratingBuilder() : _formBuilder(),
     );
   }
 }

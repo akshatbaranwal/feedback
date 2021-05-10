@@ -15,9 +15,6 @@ class Faculty {
 }
 
 class FacultyData with ChangeNotifier {
-  final connection;
-  FacultyData(this.connection);
-
   var _emailList = [];
   var _courseList = [];
   Faculty _data;
@@ -42,7 +39,7 @@ class FacultyData with ChangeNotifier {
   }
 
   Future<void> fetchCourses() async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query('''
       select *
@@ -62,7 +59,7 @@ class FacultyData with ChangeNotifier {
   }
 
   Future<void> fetchEmails() async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query('''
       select email 
@@ -85,7 +82,7 @@ class FacultyData with ChangeNotifier {
     @required email,
     @required password,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query(
         '''
@@ -126,7 +123,7 @@ class FacultyData with ChangeNotifier {
     @required name,
     @required courseid,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query(
         '''
@@ -173,7 +170,7 @@ class FacultyData with ChangeNotifier {
     @required name,
     @required List<int> courseid,
   }) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       final response = await connection.query(
         '''
@@ -204,7 +201,7 @@ class FacultyData with ChangeNotifier {
           if (!courseid.contains(element[0])) toDelete.add(element[0] as int);
         });
 
-        if (connection.isClosed) await connection.open();
+        if (connection.isClosed) await initConnection();
         toDelete.forEach((val) async {
           await connection.query(
             '''
@@ -218,7 +215,7 @@ class FacultyData with ChangeNotifier {
           );
         });
 
-        if (connection.isClosed) await connection.open();
+        if (connection.isClosed) await initConnection();
         courseid.forEach((val) async {
           await connection.query(
             '''
@@ -247,7 +244,7 @@ class FacultyData with ChangeNotifier {
   }
 
   Future<void> delete() async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       await connection.query(
         '''
@@ -268,7 +265,7 @@ class FacultyData with ChangeNotifier {
   }
 
   Future<void> updatePassword(password) async {
-    if (connection.isClosed) await connection.open();
+    if (connection.isClosed) await initConnection();
     try {
       await connection.query(
         '''

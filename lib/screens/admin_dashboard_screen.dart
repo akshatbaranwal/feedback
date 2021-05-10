@@ -98,6 +98,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
     ]);
   }
 
+  Future<void> _onRefresh() async {
+    await _fetch();
+    if (_type[0] != Type.rating)
+      setState(() {
+        _type[0] = Type.all;
+      });
+    setState(() {
+      _type[1] = Type.all;
+    });
+  }
+
   @override
   void didChangeDependencies() {
     if (_isInit) {
@@ -142,7 +153,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
           actions: [
             if (_indexBottomNavBar == 0)
               IconButton(
-                color: _type[0] == Type.rating ? Colors.white : Colors.white60,
                 onPressed: () {
                   setState(() {
                     if (_type[0] == Type.rating)
@@ -151,7 +161,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       _type[0] = Type.rating;
                   });
                 },
-                icon: Icon(Icons.analytics_outlined),
+                icon: _type[0] == Type.rating
+                    ? Icon(Icons.chat_outlined)
+                    : Icon(Icons.analytics_outlined),
               ),
             IconButton(
               onPressed: () async {
@@ -181,11 +193,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           currentIndex: _indexBottomNavBar,
           onTap: (int index) {
             setState(() {
-              _pageController.animateToPage(
-                index,
-                duration: Duration(milliseconds: 300),
-                curve: Curves.linear,
-              );
+              _pageController.jumpToPage(index);
               _indexBottomNavBar = index;
             });
           },
@@ -199,6 +207,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 child: CircularProgressIndicator(),
               )
             : PageView(
+                physics: CustomPageViewScrollPhysics(),
                 controller: _pageController,
                 onPageChanged: (index) {
                   setState(() {
@@ -206,41 +215,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   });
                 },
                 children: [
-                  RefreshIndicator(
-                    onRefresh: () async {
-                      await _fetch();
-                      if (_type[0] != Type.rating)
-                        setState(() {
-                          _type[0] = Type.all;
-                        });
-                      setState(() {
-                        _type[1] = Type.all;
-                      });
-                    },
-                    child: _type[_indexBottomNavBar] == Type.rating
-                        ? GraphList()
-                        : DiscussionList(
-                            type: _type[_indexBottomNavBar],
-                            from: User.admin,
-                            to: User.faculty,
-                          ),
-                  ),
-                  RefreshIndicator(
-                    onRefresh: () async {
-                      await _fetch();
-                      if (_type[0] != Type.rating)
-                        setState(() {
-                          _type[0] = Type.all;
-                        });
-                      setState(() {
-                        _type[1] = Type.all;
-                      });
-                    },
-                    child: DiscussionList(
-                      type: _type[_indexBottomNavBar],
-                      from: User.admin,
-                      to: User.student,
-                    ),
+                  _type[_indexBottomNavBar] == Type.rating
+                      ? GraphList(_onRefresh)
+                      : DiscussionList(
+                          type: _type[_indexBottomNavBar],
+                          from: User.admin,
+                          to: User.faculty,
+                          onRefresh: _onRefresh,
+                        ),
+                  DiscussionList(
+                    type: _type[_indexBottomNavBar],
+                    from: User.admin,
+                    to: User.student,
+                    onRefresh: _onRefresh,
                   ),
                 ],
               ),

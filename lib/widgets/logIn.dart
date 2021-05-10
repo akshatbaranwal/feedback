@@ -91,80 +91,78 @@ class _LoginState extends State<Login> {
     student = Provider.of<StudentData>(context);
     faculty = Provider.of<FacultyData>(context);
     admin = Provider.of<AdminData>(context);
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Form(
-        key: _form,
-        child: ListView(
-          children: [
-            SizedBox(
-              height: 20,
+    return Form(
+      key: _form,
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          SizedBox(
+            height: 20,
+          ),
+          TextFormField(
+            initialValue: '',
+            decoration: InputDecoration(
+              labelText: 'Email',
+              hintText: 'Enter college ID',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.email_outlined),
             ),
-            TextFormField(
-              initialValue: '',
-              decoration: InputDecoration(
-                labelText: 'Email',
-                hintText: 'Enter college ID',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email_outlined),
+            textInputAction: TextInputAction.next,
+            validator: (email) {
+              if (email.isEmpty) return 'Enter the email';
+              if (!email.endsWith('@iiita.ac.in'))
+                return 'Domain must be @iiita.ac.in';
+              if (!student.emailList.contains(email) &&
+                  !faculty.emailList.contains(email) &&
+                  !admin.emailList.contains(email))
+                return 'Email not registered';
+              return null;
+            },
+            onSaved: (email) {
+              _email = email;
+            },
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          TextFormField(
+            initialValue: '',
+            obscureText: _hidePassword,
+            decoration: InputDecoration(
+              labelText: 'Password',
+              hintText: 'Enter your password',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.lock_outline),
+              suffixIcon: IconButton(
+                icon: _hidePassword
+                    ? Icon(Icons.visibility_off_outlined)
+                    : Icon(Icons.visibility_outlined),
+                onPressed: () {
+                  setState(() {
+                    _hidePassword = !_hidePassword;
+                  });
+                },
               ),
-              textInputAction: TextInputAction.next,
-              validator: (email) {
-                if (email.isEmpty) return 'Enter the email';
-                if (!email.endsWith('@iiita.ac.in'))
-                  return 'Domain must be @iiita.ac.in';
-                if (!student.emailList.contains(email) &&
-                    !faculty.emailList.contains(email) &&
-                    !admin.emailList.contains(email))
-                  return 'Email not registered';
-                return null;
-              },
-              onSaved: (email) {
-                _email = email;
-              },
             ),
-            SizedBox(
-              height: 20,
-            ),
-            TextFormField(
-              initialValue: '',
-              obscureText: _hidePassword,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                hintText: 'Enter your password',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: _hidePassword
-                      ? Icon(Icons.visibility_off_outlined)
-                      : Icon(Icons.visibility_outlined),
-                  onPressed: () {
-                    setState(() {
-                      _hidePassword = !_hidePassword;
-                    });
-                  },
-                ),
-              ),
-              textInputAction: TextInputAction.done,
-              validator: (password) {
-                if (password.isEmpty) return 'Enter the password';
-                return null;
-              },
-              onSaved: (password) {
-                _password = password;
-              },
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _safeForm();
-              },
-              child: Text('Login'),
-            ),
-          ],
-        ),
+            textInputAction: TextInputAction.done,
+            validator: (password) {
+              if (password.isEmpty) return 'Enter the password';
+              return null;
+            },
+            onSaved: (password) {
+              _password = password;
+            },
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _safeForm();
+            },
+            child: Text('Login'),
+          ),
+        ],
       ),
     );
   }
