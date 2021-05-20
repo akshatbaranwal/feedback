@@ -106,65 +106,7 @@ class _FacultyDashboardState extends State<FacultyDashboard> {
     return showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text('Account'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx)
-                      .popAndPushNamed(UpdateAccount.routeName, arguments: {
-                    'user': User.faculty,
-                    'password': false,
-                  });
-                },
-                child: Text(
-                  'Update Details',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx)
-                      .popAndPushNamed(UpdateAccount.routeName, arguments: {
-                    'user': User.faculty,
-                    'password': true,
-                  });
-                },
-                child: Text(
-                  'Change Password',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  logOut(ctx);
-                },
-                child: Text(
-                  'Log out',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => ConfirmDelete(_faculty.delete),
-                  );
-                },
-                child: Text(
-                  'Delete Account',
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Colors.red,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
+        return Profile(User.faculty);
       },
     );
   }

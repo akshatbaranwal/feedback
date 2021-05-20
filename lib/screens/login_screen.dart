@@ -16,50 +16,58 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (ctx) {
         return AlertDialog(
           title: Text('Register as'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _login = false;
-                    _user = User.student;
-                  });
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  'Student',
-                  style: TextStyle(fontSize: 17),
+          content: Container(
+            height: 150,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _login = false;
+                        _user = User.student;
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      'Student',
+                      style: TextStyle(fontSize: 17),
+                    ),
+                  ),
                 ),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _login = false;
-                    _user = User.faculty;
-                  });
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  'Faculty',
-                  style: TextStyle(fontSize: 17),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _login = false;
+                        _user = User.faculty;
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      'Faculty',
+                      style: TextStyle(fontSize: 17),
+                    ),
+                  ),
                 ),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _login = false;
-                    _user = User.admin;
-                  });
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  'Admin',
-                  style: TextStyle(fontSize: 17),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _login = false;
+                        _user = User.admin;
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      'Admin',
+                      style: TextStyle(fontSize: 17),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

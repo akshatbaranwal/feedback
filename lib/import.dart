@@ -8,6 +8,7 @@ export 'package:draggable_scrollbar/draggable_scrollbar.dart';
 export 'dart:async';
 export 'dart:math';
 
+export 'widgets/profile.dart';
 export 'widgets/filter.dart';
 export 'widgets/logIn.dart';
 export 'widgets/logOut.dart';

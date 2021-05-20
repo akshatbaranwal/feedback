@@ -167,6 +167,7 @@ class _AddNewState extends State<AddNew> {
               _body = body;
             },
           ),
+          SizedBox(height: 10),
           ElevatedButton.icon(
             onPressed: _saveForm,
             icon: Icon(Icons.send),

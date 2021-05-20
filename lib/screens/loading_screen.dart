@@ -6,44 +6,76 @@ class Loading extends StatefulWidget {
   _LoadingState createState() => _LoadingState();
 }
 
-class _LoadingState extends State<Loading> with TickerProviderStateMixin {
-  AnimationController _controller;
-  bool _isInit = true;
+class _LoadingState extends State<Loading> {
+  double _progress;
+  bool _isInit = true, _noInternet = true;
   Random _random = Random();
-  String _msg;
+  String _msg = "Waiting for internet connection...";
 
   Future<void> _connect() async {
-    await initConnection();
+    while (_noInternet) {
+      _noInternet = false;
+      try {
+        await initConnection();
+      } catch (error) {
+        _noInternet = true;
+        await Future.delayed(Duration(seconds: 1));
+      }
+    }
+    setState(() {
+      _progress = 0;
+      _msg = funnyLoadingMessages[_random.nextInt(funnyLoadingMessages.length)];
+    });
     await Future.wait([
-      Provider.of<StudentData>(context, listen: false).fetchEmails(),
-      Provider.of<FacultyData>(context, listen: false).fetchEmails(),
-      Provider.of<AdminData>(context, listen: false).fetchEmails(),
-    ]);
-    Future.wait([
-      Provider.of<StudentData>(context, listen: false).fetchBranches(),
-      Provider.of<StudentData>(context, listen: false).fetchEnrolls(),
-      Provider.of<FacultyData>(context, listen: false).fetchCourses(),
+      Provider.of<StudentData>(context, listen: false)
+          .fetchEmails()
+          .then((value) {
+        setState(() {
+          _progress += 0.15;
+        });
+      }),
+      Provider.of<FacultyData>(context, listen: false)
+          .fetchEmails()
+          .then((value) {
+        setState(() {
+          _progress += 0.15;
+        });
+      }),
+      Provider.of<AdminData>(context, listen: false)
+          .fetchEmails()
+          .then((value) {
+        setState(() {
+          _progress += 0.15;
+        });
+      }),
+      Provider.of<StudentData>(context, listen: false)
+          .fetchBranches()
+          .then((value) {
+        setState(() {
+          _progress += 0.15;
+        });
+      }),
+      Provider.of<StudentData>(context, listen: false)
+          .fetchEnrolls()
+          .then((value) {
+        setState(() {
+          _progress += 0.15;
+        });
+      }),
+      Provider.of<FacultyData>(context, listen: false)
+          .fetchCourses()
+          .then((value) {
+        setState(() {
+          _progress += 0.15;
+        });
+      }),
     ]);
     setState(() {
-      _controller.value = 1;
+      _progress = 1;
     });
     await Navigator.of(context).pushNamed(LoginScreen.routeName);
     await connection.close();
     SystemNavigator.pop();
-  }
-
-  @override
-  void initState() {
-    _msg = funnyLoadingMessages[_random.nextInt(funnyLoadingMessages.length)];
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )
-      ..addListener(() {
-        setState(() {});
-      })
-      ..forward();
-    super.initState();
   }
 
   @override
@@ -90,7 +122,7 @@ class _LoadingState extends State<Loading> with TickerProviderStateMixin {
             height: 2,
             width: 150,
             child: LinearProgressIndicator(
-              value: _controller.value,
+              value: _progress,
             ),
           ),
           SizedBox(height: 50),

@@ -14,7 +14,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     initialPage: 0,
     keepPage: true,
   );
-  AdminData _admin;
   Timer _timer;
 
   Future<void> _filter() async {
@@ -38,52 +37,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: Text('Account'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx)
-                      .popAndPushNamed(UpdateAccount.routeName, arguments: {
-                    'user': User.admin,
-                    'password': true,
-                  });
-                },
-                child: Text(
-                  'Change Password',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  logOut(ctx);
-                },
-                child: Text(
-                  'Log out',
-                  style: TextStyle(fontSize: 17),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => ConfirmDelete(_admin.delete),
-                  );
-                },
-                child: Text(
-                  'Delete Account',
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Colors.red,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
+        return Profile(User.admin);
       },
     );
   }
@@ -137,8 +91,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    _admin = Provider.of<AdminData>(context);
-
     return WillPopScope(
       onWillPop: () async {
         return showDialog(
