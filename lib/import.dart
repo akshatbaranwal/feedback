@@ -4,6 +4,7 @@ export 'package:provider/provider.dart';
 export 'package:fl_chart/fl_chart.dart';
 export 'package:collection/collection.dart';
 export 'package:draggable_scrollbar/draggable_scrollbar.dart';
+export 'package:shared_preferences/shared_preferences.dart';
 
 export 'dart:async';
 export 'dart:math';

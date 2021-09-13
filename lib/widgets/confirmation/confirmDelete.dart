@@ -37,8 +37,7 @@ class ConfirmDelete extends StatelessWidget {
                 ),
                 onPressed: () {
                   del();
-                  Navigator.of(context)
-                      .popUntil(ModalRoute.withName(LoginScreen.routeName));
+                  logOut(context);
                 },
               ),
             ),

@@ -1,6 +1,10 @@
 import '../import.dart';
 
-void logOut(BuildContext context) {
+void logOut(BuildContext context) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setString("userType", "");
+  prefs.setString("emailId", "");
+  prefs.setString("password", "");
   Provider.of<AdminData>(context, listen: false).logout();
   Provider.of<FacultyData>(context, listen: false).logout();
   Provider.of<StudentData>(context, listen: false).logout();

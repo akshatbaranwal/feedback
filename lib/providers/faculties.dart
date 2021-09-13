@@ -38,6 +38,13 @@ class FacultyData with ChangeNotifier {
           );
   }
 
+  void _updatePrefs(emailId, password) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("userType", "faculty");
+    prefs.setString("emailId", emailId);
+    prefs.setString("password", password);
+  }
+
   Future<void> fetchCourses() async {
     if (connection.isClosed) await initConnection();
     try {
@@ -86,7 +93,7 @@ class FacultyData with ChangeNotifier {
     try {
       final response = await connection.query(
         '''
-    select facultyid, email, name, courseid
+    select facultyid, name, courseid, password
     from faculty
     join faculty_course using (facultyid)
     where email = @email
@@ -97,8 +104,48 @@ class FacultyData with ChangeNotifier {
           'password': password,
         },
       );
-      Faculty temp;
       if (response.isNotEmpty) {
+        Faculty temp;
+        List<int> courseid = [];
+        response.forEach((val) {
+          courseid.add(val[2]);
+        });
+        temp = Faculty(
+          facultyid: response[0][0],
+          email: email,
+          name: response[0][1],
+          courseid: courseid,
+        );
+        _updatePrefs(email, response[0][3]);
+        _data = temp;
+      }
+      notifyListeners();
+    } catch (error) {
+      throw (error);
+    }
+  }
+
+  Future<void> autoLogin({
+    @required email,
+    @required password,
+  }) async {
+    if (connection.isClosed) await initConnection();
+    try {
+      final response = await connection.query(
+        '''
+    select facultyid, email, name, courseid
+    from faculty
+    join faculty_course using (facultyid)
+    where email = @email
+    and password = @password
+    ''',
+        substitutionValues: {
+          'email': email,
+          'password': password,
+        },
+      );
+      if (response.isNotEmpty) {
+        Faculty temp;
         List<int> courseid = [];
         response.forEach((val) {
           courseid.add(val[3]);
@@ -109,8 +156,8 @@ class FacultyData with ChangeNotifier {
           name: response[0][2],
           courseid: courseid,
         );
+        _data = temp;
       }
-      _data = temp;
       notifyListeners();
     } catch (error) {
       throw (error);
@@ -137,8 +184,8 @@ class FacultyData with ChangeNotifier {
           'name': name,
         },
       );
-      Faculty temp;
       if (response.isNotEmpty) {
+        Faculty temp;
         await courseid.forEach((val) {
           connection.query(
             '''
@@ -158,8 +205,9 @@ class FacultyData with ChangeNotifier {
           courseid: courseid,
         );
         _emailList.add(temp.email);
+        _updatePrefs(email, response[0][2]);
+        _data = temp;
       }
-      _data = temp;
       notifyListeners();
     } catch (error) {
       throw (error);
@@ -267,17 +315,19 @@ class FacultyData with ChangeNotifier {
   Future<void> updatePassword(password) async {
     if (connection.isClosed) await initConnection();
     try {
-      await connection.query(
+      final response = await connection.query(
         '''
       update faculty
       set password = crypt(@password, gen_salt('bf'))
       where facultyid = @facultyid
+      returning *
       ''',
         substitutionValues: {
           'facultyid': _data.facultyid,
           'password': password,
         },
       );
+      if (response.isNotEmpty) _updatePrefs(response[0][1], response[0][2]);
     } catch (error) {
       throw (error);
     }

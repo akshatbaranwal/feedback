@@ -54,6 +54,13 @@ class StudentData with ChangeNotifier {
           );
   }
 
+  void _updatePrefs(emailId, password) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("userType", "student");
+    prefs.setString("emailId", emailId);
+    prefs.setString("password", password);
+  }
+
   Future<void> fetchBranches() async {
     if (connection.isClosed) await initConnection();
     try {
@@ -122,7 +129,7 @@ class StudentData with ChangeNotifier {
     try {
       final response = await connection.query(
         '''
-    select studentid, enroll, email, name, branchid, year
+    select studentid, enroll, email, name, branchid, year, password
     from student
     where email = @email
     and password = crypt(@password, password)
@@ -145,8 +152,49 @@ class StudentData with ChangeNotifier {
                   (DateTime.now().year - response[0][5]) * 2)
               .toInt(),
         );
+        _updatePrefs(email, response[0][6]);
+        _data = temp;
       }
-      _data = temp;
+      notifyListeners();
+    } catch (error) {
+      print("error");
+      throw (error);
+    }
+  }
+
+  Future<void> autoLogin({
+    @required email,
+    @required password,
+  }) async {
+    if (connection.isClosed) await initConnection();
+    try {
+      final response = await connection.query(
+        '''
+    select studentid, enroll, email, name, branchid, year
+    from student
+    where email = @email
+    and password = @password
+    ''',
+        substitutionValues: {
+          'email': email,
+          'password': password,
+        },
+      );
+      Student temp;
+      if (response.isNotEmpty) {
+        temp = Student(
+          studentid: response[0][0],
+          enroll: response[0][1],
+          email: response[0][2],
+          name: response[0][3],
+          branchid: response[0][4],
+          year: response[0][5],
+          sem: (DateTime.now().month / 6 +
+                  (DateTime.now().year - response[0][5]) * 2)
+              .toInt(),
+        );
+        _data = temp;
+      }
       notifyListeners();
     } catch (error) {
       throw (error);
@@ -193,8 +241,9 @@ class StudentData with ChangeNotifier {
         );
         _emailList.add(temp.email);
         _enrollList.add(temp.enroll);
+        _updatePrefs(email, response[0][3]);
+        _data = temp;
       }
-      _data = temp;
       notifyListeners();
     } catch (error) {
       throw (error);
@@ -275,17 +324,19 @@ class StudentData with ChangeNotifier {
   Future<void> updatePassword(password) async {
     if (connection.isClosed) await initConnection();
     try {
-      await connection.query(
+      final response = await connection.query(
         '''
       update student
       set password = crypt(@password, gen_salt('bf'))
       where studentid = @studentid
+      returning *
       ''',
         substitutionValues: {
           'studentid': _data.studentid,
           'password': password,
         },
       );
+      if (response.isNotEmpty) _updatePrefs(response[0][2], response[0][3]);
     } catch (error) {
       throw (error);
     }

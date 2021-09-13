@@ -26,9 +26,9 @@ class ConfirmExit extends StatelessWidget {
                   'Yes',
                   style: TextStyle(fontSize: 16),
                 ),
-                onPressed: () {
-                  Navigator.of(context)
-                      .popUntil(ModalRoute.withName(Loading.routeName));
+                onPressed: () async {
+                  await connection.close();
+                  SystemNavigator.pop();
                 },
               ),
             ),

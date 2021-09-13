@@ -27,6 +27,13 @@ class AdminData with ChangeNotifier {
           );
   }
 
+  void _updatePrefs(emailId, password) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("userType", "admin");
+    prefs.setString("emailId", emailId);
+    prefs.setString("password", password);
+  }
+
   Future<void> fetchEmails() async {
     if (connection.isClosed) await initConnection();
     try {
@@ -55,7 +62,7 @@ class AdminData with ChangeNotifier {
     try {
       final response = await connection.query(
         '''
-    select adminid, email
+    select adminid, email, password
     from admin
     where email = @email
     and password = crypt(@password, password)
@@ -65,14 +72,47 @@ class AdminData with ChangeNotifier {
           'password': password,
         },
       );
-      Admin temp;
       if (response.isNotEmpty) {
+        Admin temp;
         temp = Admin(
           adminid: response[0][0],
           email: response[0][1],
         );
+        _updatePrefs(response[0][1], response[0][2]);
+        _data = temp;
       }
-      _data = temp;
+      notifyListeners();
+    } catch (error) {
+      throw (error);
+    }
+  }
+
+  Future<void> autoLogin({
+    @required email,
+    @required password,
+  }) async {
+    if (connection.isClosed) await initConnection();
+    try {
+      final response = await connection.query(
+        '''
+    select adminid, email
+    from admin
+    where email = @email
+    and password = @password
+    ''',
+        substitutionValues: {
+          'email': email,
+          'password': password,
+        },
+      );
+      if (response.isNotEmpty) {
+        Admin temp;
+        temp = Admin(
+          adminid: response[0][0],
+          email: response[0][1],
+        );
+        _data = temp;
+      }
       notifyListeners();
     } catch (error) {
       throw (error);
@@ -96,15 +136,16 @@ class AdminData with ChangeNotifier {
           'password': password,
         },
       );
-      Admin temp;
       if (response.isNotEmpty) {
+        Admin temp;
         temp = Admin(
           adminid: response[0][0],
           email: response[0][1],
         );
         _emailList.add(temp.email);
+        _updatePrefs(response[0][1], response[0][2]);
+        _data = temp;
       }
-      _data = temp;
       notifyListeners();
     } catch (error) {
       throw (error);
@@ -135,17 +176,19 @@ class AdminData with ChangeNotifier {
   Future<void> updatePassword(password) async {
     if (connection.isClosed) await initConnection();
     try {
-      await connection.query(
+      final response = await connection.query(
         '''
       update admin
       set password = crypt(@password, gen_salt('bf'))
       where adminid = @adminid
+      returning *
       ''',
         substitutionValues: {
           'adminid': _data.adminid,
           'password': password,
         },
       );
+      if (response.isNotEmpty) _updatePrefs(response[0][1], response[0][2]);
     } catch (error) {
       throw (error);
     }
